@@ -1,4 +1,4 @@
-# Ctrl+Alt+Learn — Product Brief (Draft 0.2)
+# Ctrl+Alt+Learn — Product Brief (Draft 0.3)
 
 ## Product idea
 
@@ -184,6 +184,16 @@ Initial aviation scenario themes:
 - Final assessment and results
 - Exportable completion certificate
 - Optional administrator dashboard for assignment, completion, policy configuration, and reporting
+
+## Pilot launch experience
+
+- Four-step onboarding: welcome, learner profile, AI skill/goals, and a trust diagnostic.
+- Personalized learner identity and certificate name.
+- One six-minute playable data-safety mission; seven additional Intro 101 missions remain planned for the complete 29-minute course.
+- Server-backed learners, course assignments, organization settings, and completion records.
+- Admin control room with Overview, People, Assignments, Courses, Reports, and Settings.
+- CSV completion export and print-to-PDF learner certificate.
+- Temporary prototype admin password only; production identity, roles, rate limiting, password rotation, and audit logging remain required before organizational rollout.
 
 ## Certificate and completion record
 

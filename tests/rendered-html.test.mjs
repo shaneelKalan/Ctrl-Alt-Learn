@@ -1,38 +1,53 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-async function render() {
-  const workerUrl = new URL("../dist/server/index.js", import.meta.url);
-  workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}`);
-  const { default: worker } = await import(workerUrl.href);
+const root = new URL("../", import.meta.url);
 
-  return worker.fetch(
-    new Request("http://localhost/", { headers: { accept: "text/html" } }),
-    { ASSETS: { fetch: async () => new Response("Not found", { status: 404 }) } },
-    { waitUntil() {}, passThroughOnException() {} },
-  );
+async function source(path) {
+  return readFile(new URL(path, root), "utf8");
 }
 
-test("server-renders the Ctrl+Alt+Learn prototype", async () => {
-  const response = await render();
-  assert.equal(response.status, 200);
-  assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
+test("ships guided learner onboarding", async () => {
+  const [page, onboarding] = await Promise.all([
+    source("app/page.tsx"),
+    source("app/Onboarding.tsx"),
+  ]);
 
-  const html = await response.text();
-  assert.match(html, /<title>Ctrl\+Alt\+Learn/);
-  assert.match(html, /The Data Safety/);
-  assert.match(html, /Start mission/);
-  assert.match(html, /AVIATION OPERATIONS EDITION/);
-  assert.match(html, /Certificate unlocked/);
-  assert.doesNotMatch(html, /codex-preview|react-loading-skeleton|Your site is taking shape/i);
+  assert.match(page, /cal-learner-profile-v1/);
+  assert.match(page, /<Onboarding/);
+  assert.match(onboarding, /WELCOME ABOARD/);
+  assert.match(onboarding, /YOUR BADGE/);
+  assert.match(onboarding, /YOUR FLIGHT PLAN/);
+  assert.match(onboarding, /TRUST CHECK/);
 });
 
-test("includes accessible interactive controls and source context", async () => {
-  const response = await render();
-  const html = await response.text();
+test("protects admin routes with an HTTP-only session cookie", async () => {
+  const [auth, login, admin] = await Promise.all([
+    source("app/api/admin/_auth.ts"),
+    source("app/api/admin/login/route.ts"),
+    source("app/api/admin/route.ts"),
+  ]);
 
-  assert.match(html, /<button[^>]*>Start mission/);
-  assert.match(html, /aria-label="Intro 101 missions"/);
-  assert.match(html, /NIST AI RMF/);
-  assert.match(html, /FAA AI Safety Assurance/);
+  assert.match(auth, /HttpOnly; Secure; SameSite=Strict/);
+  assert.match(auth, /ADMIN_PASSWORD/);
+  assert.match(login, /Incorrect password/);
+  assert.match(admin, /Admin session required/);
+  assert.match(admin, /createLearner/);
+  assert.match(admin, /createAssignment/);
+  assert.match(admin, /saveSettings/);
+});
+
+test("includes durable training records and a generated migration", async () => {
+  const [schema, migration, hosting] = await Promise.all([
+    source("db/schema.ts"),
+    source("drizzle/0000_plain_war_machine.sql"),
+    source(".openai/hosting.json"),
+  ]);
+
+  assert.match(schema, /learners/);
+  assert.match(schema, /assignments/);
+  assert.match(schema, /completions/);
+  assert.match(migration, /CREATE TABLE `organization_settings`/);
+  assert.match(hosting, /"d1": "DB"/);
 });

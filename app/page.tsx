@@ -1,8 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { AdminPortal } from "./AdminPortal";
+import { LearnerProfile, Onboarding } from "./Onboarding";
 
 type View = "dashboard" | "mission" | "results";
+type AppMode = "loading" | "onboarding" | "learner" | "admin";
 
 type Choice = {
   id: string;
@@ -13,11 +16,11 @@ type Choice = {
 };
 
 const missions = [
-  { id: 1, title: "Meet Your AI Teammate", state: "done" },
-  { id: 2, title: "What AI Does Well", state: "done" },
-  { id: 3, title: "Spot the Confident Guess", state: "done" },
-  { id: 4, title: "The Data Safety Checkpoint", state: "current" },
-  { id: 5, title: "Prompt Repair Shop", state: "next" },
+  { id: 1, title: "The Data Safety Checkpoint", state: "current" },
+  { id: 2, title: "Meet Your AI Teammate", state: "next" },
+  { id: 3, title: "What AI Does Well", state: "locked" },
+  { id: 4, title: "Spot the Confident Guess", state: "locked" },
+  { id: 5, title: "Prompt Repair Shop", state: "locked" },
   { id: 6, title: "Verify Before You Fly", state: "locked" },
   { id: 7, title: "Human in the Loop", state: "locked" },
   { id: 8, title: "Final Shift Challenge", state: "locked" },
@@ -185,7 +188,7 @@ function ChoiceCards({
   );
 }
 
-function MissionRail({ active = 4 }: { active?: number }) {
+function MissionRail({ active = 1 }: { active?: number }) {
   return (
     <aside className="mission-rail" aria-label="Intro 101 missions">
       <div className="brand-lockup">
@@ -202,15 +205,17 @@ function MissionRail({ active = 4 }: { active?: number }) {
         ))}
       </nav>
       <div className="rail-progress">
-        <span><b>Course progress</b><b>3/8</b></span>
+        <span><b>Pilot progress</b><b>0/1</b></span>
         <i><b /></i>
-        <small>12 minutes estimated remaining</small>
+        <small>One playable mission · seven in production</small>
       </div>
     </aside>
   );
 }
 
 export default function Home() {
+  const [mode, setMode] = useState<AppMode>("loading");
+  const [profile, setProfile] = useState<LearnerProfile | null>(null);
   const [view, setView] = useState<View>("dashboard");
   const [stage, setStage] = useState(0);
   const [mistakes, setMistakes] = useState(0);
@@ -223,6 +228,21 @@ export default function Home() {
   const score = Math.max(80, 100 - mistakes * 5);
 
   useEffect(() => {
+    const savedProfile = window.localStorage.getItem("cal-learner-profile-v1");
+    if (savedProfile) {
+      try {
+        const parsed = JSON.parse(savedProfile) as LearnerProfile;
+        setProfile(parsed);
+        setLearnerName(parsed.name);
+        setMode("learner");
+      } catch {
+        window.localStorage.removeItem("cal-learner-profile-v1");
+        setMode("onboarding");
+      }
+    } else {
+      setMode("onboarding");
+    }
+
     const saved = window.localStorage.getItem("ctrl-alt-learn-progress");
     if (!saved) return;
     try {
@@ -259,6 +279,13 @@ export default function Home() {
         "ctrl-alt-learn-progress",
         JSON.stringify({ completed: true, name: learnerName, certificateId: id }),
       );
+      if (profile) {
+        void fetch("/api/completions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...profile, score, certificateId: id }),
+        });
+      }
       setView("results");
       return;
     }
@@ -289,18 +316,40 @@ export default function Home() {
     setRedactions([]);
   }
 
+  function completeOnboarding(nextProfile: LearnerProfile) {
+    window.localStorage.setItem("cal-learner-profile-v1", JSON.stringify(nextProfile));
+    setProfile(nextProfile);
+    setLearnerName(nextProfile.name);
+    setMode("learner");
+    setView("dashboard");
+  }
+
+  if (mode === "loading") {
+    return <div className="launch-loader" role="status"><span className="brand-keys"><i>⌃</i><i>⌥</i><i>↵</i></span><strong>Preparing your training…</strong></div>;
+  }
+
+  if (mode === "onboarding") {
+    return <Onboarding onComplete={completeOnboarding} onAdmin={() => setMode("admin")} />;
+  }
+
+  if (mode === "admin") {
+    return <AdminPortal onExit={() => setMode(profile ? "learner" : "onboarding")} />;
+  }
+
+  const initials = (profile?.name || "Learner").split(" ").map((part) => part[0]).slice(0, 2).join("").toUpperCase();
+
   return (
     <main className="app-shell">
       <MissionRail />
       <section className="workspace">
         <header className="topbar">
-          <div><span className="edition-chip">AVIATION OPERATIONS EDITION</span><span className="status-chip"><i /> Prototype saved locally</span></div>
-          <div className="profile"><span>JR</span><p><strong>Jordan Reyes</strong><small>Learner · Intro 101</small></p></div>
+          <div><span className="edition-chip">AVIATION OPERATIONS EDITION</span><span className="status-chip"><i /> Progress connected</span></div>
+          <div className="learner-controls"><button className="topbar-admin" type="button" onClick={() => setMode("admin")}>Admin</button><button className="topbar-switch" type="button" onClick={() => { window.localStorage.removeItem("cal-learner-profile-v1"); setProfile(null); setMode("onboarding"); }}>Switch learner</button><div className="profile"><span>{initials}</span><p><strong>{profile?.name}</strong><small>{profile?.role || "Learner"} · {profile?.skillLevel}</small></p></div></div>
         </header>
 
         {view === "dashboard" && (
           <div className="dashboard page-enter">
-            <div className="episode-kicker"><span>EPISODE 04</span><i /> DATA SAFETY</div>
+            <div className="episode-kicker"><span>EPISODE 01</span><i /> DATA SAFETY PILOT</div>
             <div className="dashboard-heading">
               <div><h1>The Data Safety<br />Checkpoint</h1><p>Help the crew use AI without sending sensitive information somewhere it does not belong.</p></div>
               <div className="time-card"><small>ESTIMATED TIME</small><strong>6 min</strong><span>Interactive scenario</span></div>
@@ -431,7 +480,7 @@ export default function Home() {
           <p>This certifies that</p>
           <h1>{learnerName || "Learner Name"}</h1>
           <p>successfully completed</p>
-          <h2>AI Chatbots: Intro 101</h2>
+          <h2>AI Chatbots: Intro 101 — Pilot Mission</h2>
           <h3>Data Safety Checkpoint · Aviation Operations Edition</h3>
           <div className="certificate-meta"><span><small>COMPLETED</small>{new Intl.DateTimeFormat("en-US", { dateStyle: "long" }).format(new Date())}</span><span><small>MASTERY</small>{score}%</span><span><small>CERTIFICATE ID</small>{certificateId}</span></div>
           <div className="certificate-rule">Pause · Classify · Minimize · Verify</div>
