@@ -189,7 +189,7 @@ Initial aviation scenario themes:
 
 - Four-step onboarding: welcome, learner profile, AI skill/goals, and a trust diagnostic.
 - Personalized learner identity and certificate name.
-- One six-minute playable data-safety mission; seven additional Intro 101 missions remain planned for the complete 29-minute course.
+- One fifteen-minute playable episode combining an AI preflight, acted DASI AOG sourcing scenario, and coached data-safety mission; seven additional Intro 101 missions remain planned for the complete course.
 - Server-backed learners, course assignments, organization settings, and completion records.
 - Admin control room with Overview, People, Assignments, Courses, Reports, and Settings.
 - CSV completion export and print-to-PDF learner certificate.
@@ -218,7 +218,7 @@ This slice will validate tone, interaction, accessibility, learning depth, and s
 ## Decisions still needed
 
 1. Should the first prototype ask only for a learner name, or include a basic sign-in and administrator view?
-2. What organization or aviation setting should inspire the first cast and scenarios: airline operations, airport operations, maintenance/MRO, corporate aviation, manufacturing, or a deliberately mixed workplace?
+2. **Resolved:** DASI is the setting: an aviation parts supplier, sourcer, and logistics company. Scenarios should reflect AOG requests, RFQs, supplier quotes, trace documentation, customer relationships, pricing, sourcing, and logistics—not airline or airport operations.
 3. Should a learner need a passing threshold to earn the certificate? A recommended starting point is 80% with unlimited coaching-based retries.
 4. Should experienced learners be able to test out of introductory material, or should everyone complete the same under-30-minute path?
 5. Which internal AI, data-handling, information-security, or acceptable-use policies should eventually be represented?

@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 
 type AdminTab = "overview" | "people" | "assignments" | "courses" | "reports" | "settings";
 
@@ -40,6 +40,7 @@ type AdminData = {
   assignments: Assignment[];
   completions: Completion[];
   settings: Record<string, string>;
+  durableStorage?: boolean;
 };
 
 const tabs: { id: AdminTab; label: string; icon: string }[] = [
@@ -103,7 +104,7 @@ export function AdminPortal({ onExit }: { onExit: () => void }) {
           <label><span>Password</span><input autoFocus type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Enter admin password" /></label>
           {loginError && <div className="form-error" role="alert">{loginError}</div>}
           <button className="primary-button" type="submit">Open dashboard <span>→</span></button>
-          <div className="demo-warning"><b>Prototype access</b><span>Temporary password: <code>123456</code>. Do not store real employee-sensitive data until production authentication is added.</span></div>
+          <div className="demo-warning"><b>Prototype access</b><span>Use the pilot password configured by your deployment administrator. Do not store real employee-sensitive data until production authentication is added.</span></div>
         </form>
       </main>
     );
@@ -132,7 +133,18 @@ function AdminDashboard({ onExit, onSignedOut }: { onExit: () => void; onSignedO
     setLoading(false);
   }
 
-  useEffect(() => { void loadData(); }, []);
+  useEffect(() => {
+    let active = true;
+    fetch("/api/admin").then(async (response) => {
+      if (response.status === 401) { onSignedOut(); return; }
+      const payload = (await response.json()) as AdminData & { error?: string };
+      if (!active) return;
+      if (!response.ok) setError(payload.error ?? "The dashboard could not load.");
+      else setData(payload);
+      setLoading(false);
+    });
+    return () => { active = false; };
+  }, [onSignedOut]);
 
   async function action(payload: Record<string, unknown>, success: string) {
     setError("");
@@ -172,7 +184,7 @@ function AdminDashboard({ onExit, onSignedOut }: { onExit: () => void; onSignedO
           <span className="brand-keys"><i>⌃</i><i>⌥</i><i>↵</i></span>
           <span><strong>Ctrl+Alt+Learn</strong><small>Admin control room</small></span>
         </div>
-        <div className="admin-org"><span>ORGANIZATION</span><strong>{data.settings.organizationName || "Pilot Team"}</strong><small>{data.settings.industry || "Aviation"} edition</small></div>
+        <div className="admin-org"><span>ORGANIZATION</span><strong>{data.settings.organizationName || "DASI"}</strong><small>{data.settings.industry || "Aviation Parts & Logistics"} edition</small></div>
         <nav aria-label="Admin dashboard">
           {tabs.map((item) => <button className={tab === item.id ? "active" : ""} key={item.id} onClick={() => setTab(item.id)} type="button"><span>{item.icon}</span>{item.label}</button>)}
         </nav>
@@ -185,6 +197,7 @@ function AdminDashboard({ onExit, onSignedOut }: { onExit: () => void; onSignedO
           <div className="profile"><span>AD</span><p><strong>Training Admin</strong><small>Organization owner</small></p></div>
         </header>
         {(notice || error) && <div className={`admin-toast ${error ? "error" : ""}`} role="status">{error || notice}<button type="button" onClick={() => { setNotice(""); setError(""); }}>×</button></div>}
+        {!loading && data.durableStorage === false && <div className="admin-toast error" role="status">Preview storage is temporary. Connect Upstash Redis in Vercel before collecting pilot results.</div>}
 
         {loading ? <div className="admin-loading" role="status">Loading the control room…</div> : (
           <div className="admin-content page-enter">
@@ -193,7 +206,7 @@ function AdminDashboard({ onExit, onSignedOut }: { onExit: () => void; onSignedO
             {tab === "assignments" && <Assignments data={data} action={action} />}
             {tab === "courses" && <Courses data={data} action={action} />}
             {tab === "reports" && <Reports data={data} averageScore={averageScore} />}
-            {tab === "settings" && <Settings data={data} action={action} />}
+            {tab === "settings" && <Settings key={JSON.stringify(data.settings)} data={data} action={action} />}
           </div>
         )}
       </section>
@@ -219,16 +232,16 @@ function Overview({ data, assignedCount, completionRate, averageScore, setTab }:
       <section className="admin-panel"><div className="admin-panel-title"><div><span>RECENT ACTIVITY</span><h2>Assignments</h2></div><button onClick={() => setTab("assignments")} type="button">View all →</button></div>
         {recent.length ? <div className="activity-list">{recent.map((item) => <div key={item.id}><span className={`status-dot ${item.status}`} /><p><strong>{item.learnerName}</strong><small>AI Chatbots: Intro 101 · {item.status}</small></p><time>{item.dueDate ? `Due ${item.dueDate}` : "No due date"}</time></div>)}</div> : <EmptyState title="No assignments yet" copy="Add a learner and assign Intro 101 to start the pilot." />}
       </section>
-      <section className="admin-panel course-health"><div className="admin-panel-title"><div><span>COURSE HEALTH</span><h2>Intro 101 pilot</h2></div><b className="published">PUBLISHED</b></div><div className="course-mini-scene" aria-hidden="true"><i /><i /><span>AI?</span></div><ul><li><span>1</span> playable mission</li><li><span>6m</span> pilot duration</li><li><span>{data.settings.passingScore || "80"}%</span> passing score</li></ul><button className="secondary-button" type="button" onClick={() => setTab("courses")}>Manage course</button></section>
+      <section className="admin-panel course-health"><div className="admin-panel-title"><div><span>COURSE HEALTH</span><h2>Intro 101 pilot</h2></div><b className="published">PUBLISHED</b></div><div className="course-mini-scene" aria-hidden="true"><i /><i /><span>AI?</span></div><ul><li><span>1</span> playable episode</li><li><span>15m</span> pilot duration</li><li><span>{data.settings.passingScore || "80"}%</span> passing score</li></ul><button className="secondary-button" type="button" onClick={() => setTab("courses")}>Manage course</button></section>
     </div>
   </>;
 }
 
 function People({ data, action }: { data: AdminData; action: (payload: Record<string, unknown>, success: string) => Promise<boolean> }) {
-  const [form, setForm] = useState({ name: "", email: "", department: "Operations", skillLevel: "Beginner" });
+  const [form, setForm] = useState({ name: "", email: "", department: "Sourcing", skillLevel: "Beginner" });
   async function submit(event: FormEvent) {
     event.preventDefault();
-    if (await action({ action: "createLearner", ...form }, "Learner added to the roster.")) setForm({ name: "", email: "", department: "Operations", skillLevel: "Beginner" });
+    if (await action({ action: "createLearner", ...form }, "Learner added to the roster.")) setForm({ name: "", email: "", department: "Sourcing", skillLevel: "Beginner" });
   }
   return <>
     <PageHeading eyebrow="PEOPLE" title="Build your learning roster" copy="Add employees, see their readiness level, and prepare assignments." />
@@ -252,7 +265,7 @@ function Courses({ data, action }: { data: AdminData; action: (payload: Record<s
   const published = data.settings.coursePublished !== "false";
   return <>
     <PageHeading eyebrow="COURSES" title="Shape the learning experience" copy="Control availability and review the Intro 101 mission plan." />
-    <section className="course-admin-card comic-box"><div className="course-admin-cover"><span>COURSE 01</span><strong>AI Chatbots:<br />Intro 101</strong><small>AVIATION OPERATIONS EDITION</small></div><div className="course-admin-body"><div><span className="status-pill published">{published ? "Pilot published" : "Draft"}</span><h2>Human-first AI foundations</h2><p>The data-safety pilot is playable now. Seven additional short missions are outlined for the complete 29-minute course.</p></div><div className="course-admin-stats"><span><b>1 live</b> mission</span><span><b>6</b> minutes</span><span><b>{data.settings.passingScore || "80"}%</b> pass</span></div><button className="secondary-button" type="button" onClick={() => void action({ action: "saveSettings", settings: { coursePublished: String(!published) } }, published ? "Course moved to draft." : "Course published.")}>{published ? "Move to draft" : "Publish course"}</button></div></section>
+    <section className="course-admin-card comic-box"><div className="course-admin-cover"><span>COURSE 01</span><strong>AI Chatbots:<br />Intro 101</strong><small>DASI · PARTS & LOGISTICS</small></div><div className="course-admin-body"><div><span className="status-pill published">{published ? "Pilot published" : "Draft"}</span><h2>Human-first AI foundations</h2><p>The AI preflight and AOG data-safety episode are playable now. Seven additional short missions are outlined for the complete course.</p></div><div className="course-admin-stats"><span><b>1 live</b> episode</span><span><b>15</b> minutes</span><span><b>{data.settings.passingScore || "80"}%</b> pass</span></div><button className="secondary-button" type="button" onClick={() => void action({ action: "saveSettings", settings: { coursePublished: String(!published) } }, published ? "Course moved to draft." : "Course published.")}>{published ? "Move to draft" : "Publish course"}</button></div></section>
     <div className="module-grid">{["Meet Your AI Teammate", "What AI Does Well", "Spot the Confident Guess", "The Data Safety Checkpoint", "Prompt Repair Shop", "Verify Before You Fly", "Human in the Loop", "Final Shift Challenge"].map((title, index) => <article key={title}><span>{String(index + 1).padStart(2, "0")}</span><div><strong>{title}</strong><small>{index === 3 ? "Playable prototype" : "Curriculum outlined"}</small></div><b>{index === 3 ? "LIVE" : "PLANNED"}</b></article>)}</div>
   </>;
 }
@@ -273,12 +286,11 @@ function Reports({ data, averageScore }: { data: AdminData; averageScore: number
 
 function Settings({ data, action }: { data: AdminData; action: (payload: Record<string, unknown>, success: string) => Promise<boolean> }) {
   const [settings, setSettings] = useState(data.settings);
-  useEffect(() => setSettings(data.settings), [data.settings]);
   function update(key: string, value: string) { setSettings((current) => ({ ...current, [key]: value })); }
   return <>
     <PageHeading eyebrow="SETTINGS" title="Set your organization defaults" copy="Customize the pilot’s identity, expectations, certificate rules, and AI-use guidance." />
     <form className="settings-grid" onSubmit={(event) => { event.preventDefault(); void action({ action: "saveSettings", settings }, "Organization settings saved."); }}>
-      <section className="admin-panel"><div className="admin-panel-title"><div><span>ORGANIZATION</span><h2>Brand and context</h2></div></div><label><span>Organization name</span><input value={settings.organizationName || ""} onChange={(event) => update("organizationName", event.target.value)} /></label><label><span>Industry edition</span><select value={settings.industry || "Aviation"} onChange={(event) => update("industry", event.target.value)}><option>Aviation</option><option>General workplace</option><option>Healthcare</option><option>Financial services</option><option>Education</option></select></label></section>
+      <section className="admin-panel"><div className="admin-panel-title"><div><span>ORGANIZATION</span><h2>Brand and context</h2></div></div><label><span>Organization name</span><input value={settings.organizationName || ""} onChange={(event) => update("organizationName", event.target.value)} /></label><label><span>Industry edition</span><select value={settings.industry || "Aviation Parts & Logistics"} onChange={(event) => update("industry", event.target.value)}><option>Aviation Parts & Logistics</option><option>General workplace</option><option>Healthcare</option><option>Financial services</option><option>Education</option></select></label></section>
       <section className="admin-panel"><div className="admin-panel-title"><div><span>COMPLETION</span><h2>Scoring and reminders</h2></div></div><label><span>Passing score</span><input min="60" max="100" type="number" value={settings.passingScore || "80"} onChange={(event) => update("passingScore", event.target.value)} /></label><label><span>Reminder cadence</span><select value={settings.reminderDays || "7"} onChange={(event) => update("reminderDays", event.target.value)}><option value="3">Every 3 days</option><option value="7">Every 7 days</option><option value="14">Every 14 days</option></select></label><label className="switch-row"><span><b>Completion certificates</b><small>Allow learners to export a certificate.</small></span><input type="checkbox" checked={settings.certificatesEnabled !== "false"} onChange={(event) => update("certificatesEnabled", String(event.target.checked))} /></label></section>
       <section className="admin-panel policy-settings"><div className="admin-panel-title"><div><span>AI USE POLICY</span><h2>Learner-facing policy note</h2></div></div><label><span>Guidance shown in training</span><textarea rows={5} value={settings.policyNote || ""} onChange={(event) => update("policyNote", event.target.value)} /></label><p>This is organization policy text, not legal advice. Keep jurisdiction-specific requirements separately reviewed.</p></section>
       <div className="settings-actions"><button className="primary-button" type="submit">Save settings <span>✓</span></button></div>

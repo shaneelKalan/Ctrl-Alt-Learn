@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AdminPortal } from "./AdminPortal";
 import { LearnerProfile, Onboarding } from "./Onboarding";
 
-type View = "dashboard" | "mission" | "results";
+type View = "dashboard" | "academy" | "story" | "mission" | "results";
 type AppMode = "loading" | "onboarding" | "learner" | "admin";
 
 type Choice = {
@@ -16,7 +16,7 @@ type Choice = {
 };
 
 const missions = [
-  { id: 1, title: "The Data Safety Checkpoint", state: "current" },
+  { id: 1, title: "The AOG Data Checkpoint", state: "current" },
   { id: 2, title: "Meet Your AI Teammate", state: "next" },
   { id: 3, title: "What AI Does Well", state: "locked" },
   { id: 4, title: "Spot the Confident Guess", state: "locked" },
@@ -29,11 +29,11 @@ const missions = [
 const firstChoices: Choice[] = [
   {
     id: "paste",
-    label: "Paste the entire report",
-    detail: "The chatbot can summarize it fastest if it sees everything.",
+    label: "Paste the entire RFQ and quotes",
+    detail: "The chatbot can compare them fastest if it sees everything.",
     correct: false,
     coach:
-      "Fast is not automatically safe. The report contains personal and internal information, and the tool has not been approved.",
+      "Fast is not automatically safe. The RFQ and quotes contain customer, supplier, pricing, and internal information, and the tool has not been approved.",
   },
   {
     id: "pause",
@@ -54,16 +54,16 @@ const firstChoices: Choice[] = [
 ];
 
 const dataItems = [
-  { id: "name", text: "Customer: Elena Ruiz", sensitive: true, tag: "Personal" },
-  { id: "booking", text: "Booking ref: K7M2Q9", sensitive: true, tag: "Identifier" },
-  { id: "route", text: "Route: BOS → DCA", sensitive: false, tag: "Operational" },
+  { id: "name", text: "Customer: Northstar Aviation", sensitive: true, tag: "Customer" },
+  { id: "booking", text: "RFQ ref: DASI-84729", sensitive: true, tag: "Identifier" },
+  { id: "route", text: "Logistics lane: MIA → DFW", sensitive: false, tag: "Logistics" },
   {
     id: "reason",
-    text: "Delay: crew scheduling issue",
+    text: "Part needed: fuel control unit",
     sensitive: false,
     tag: "Operational",
   },
-  { id: "phone", text: "Phone: (617) 555-0142", sensitive: true, tag: "Personal" },
+  { id: "phone", text: "Buyer mobile: (305) 555-0142", sensitive: true, tag: "Personal" },
 ];
 
 const promptChoices: Choice[] = [
@@ -77,7 +77,7 @@ const promptChoices: Choice[] = [
   },
   {
     id: "safe",
-    label: "Create a customer-safe operations summary",
+    label: "Create a customer-safe sourcing update",
     detail:
       "Use the redacted note. Return three bullets, separate facts from assumptions, and flag missing information.",
     correct: true,
@@ -86,11 +86,11 @@ const promptChoices: Choice[] = [
   },
   {
     id: "creative",
-    label: "Make the delay sound harmless",
-    detail: "Fill in any missing details so the message feels complete.",
+    label: "Make the sourcing update sound confirmed",
+    detail: "Fill in missing availability and lead-time details so the message feels complete.",
     correct: false,
     coach:
-      "AI should not soften safety-relevant facts or invent missing details. Accuracy and appropriate review matter more than polish.",
+      "AI should not invent stock, trace, price, or lead-time details. Accuracy and appropriate review matter more than polish.",
   },
 ];
 
@@ -107,7 +107,7 @@ const verifyChoices: Choice[] = [
     id: "review",
     label: "Check the source and route it for review",
     detail:
-      "Confirm every claim against the redacted report, then use the normal operational approval process.",
+      "Confirm every claim against the approved source material, then use the normal DASI review process.",
     correct: true,
     coach:
       "That keeps a person accountable. Verification should match the impact of the output.",
@@ -124,30 +124,121 @@ const verifyChoices: Choice[] = [
 
 const stageLabels = ["Choose", "Classify", "Prompt", "Verify"];
 
-function OfficeScene({ stage }: { stage: number }) {
+const stageDetails = [
+  { eyebrow: "TOOL CHECK", reward: "+25 XP", consequence: "The AOG request stays inside DASI-approved systems." },
+  { eyebrow: "DATA SHIELD", reward: "+25 XP", consequence: "Maya keeps the useful sourcing facts without exposing a customer." },
+  { eyebrow: "PROMPT POWER", reward: "+25 XP", consequence: "The chatbot gets a clear job—and no permission to invent." },
+  { eyebrow: "HUMAN CONTROL", reward: "+25 XP", consequence: "A qualified reviewer stays accountable for what leaves the desk." },
+];
+
+type AcademySlide = {
+  icon: string; chapter: string; label: string; title: string; copy: string; callout: string; tone: string;
+  choices?: { id: string; label: string; correct: boolean; coach: string }[];
+};
+
+const academySlides: AcademySlide[] = [
+  { icon: "✦", chapter: "FOUNDATIONS", label: "AI IN PLAIN ENGLISH", title: "A prediction engine, not a teammate with judgment.", copy: "Generative AI produces new text, images, or code by predicting patterns from its training and the context you provide. It can imitate expertise without possessing experience, intent, or accountability.", callout: "Fluent is not the same as factual.", tone: "blue" },
+  { icon: "▤", chapter: "FOUNDATIONS", label: "CONTEXT WINDOW", title: "It only sees the world you give it.", copy: "A chatbot uses your prompt, the conversation, and any connected material as context. Missing context produces guesses; excessive context can expose data or bury the important instruction.", callout: "Relevant context beats maximum context.", tone: "purple" },
+  { icon: "⚡", chapter: "USE", label: "GREEN-LIGHT WORK", title: "Give it reversible, reviewable work.", copy: "Good starting uses include brainstorming, restructuring approved text, drafting low-risk messages, explaining concepts, and formatting information. The safer pattern is easy to review and easy to undo.", callout: "Draft faster. Decide like a human.", tone: "teal" },
+  { icon: "?", chapter: "CHECKPOINT", label: "YOU MAKE THE CALL", title: "Which task is the best AI starting point?", copy: "Choose the task with low impact, approved information, and a result a person can quickly review.", callout: "Risk rises with impact, sensitive data, and difficult verification.", tone: "yellow", choices: [
+    { id: "draft", label: "Draft a meeting agenda from approved bullet points", correct: true, coach: "Exactly. It is low impact, uses approved inputs, and is easy to review." },
+    { id: "approve", label: "Approve an airworthiness document without technical review", correct: false, coach: "That requires qualified human review and cannot be delegated to a chatbot." },
+    { id: "rank", label: "Rank suppliers using confidential pricing in a public tool", correct: false, coach: "The data, decision impact, and unapproved tool make this unsafe." },
+  ] },
+  { icon: "!", chapter: "RISK", label: "CONFABULATION", title: "A polished answer can be invented.", copy: "Generative AI can fabricate citations, part details, calculations, or explanations. It may also omit a condition that changes the answer. NIST calls this risk confabulation; many people call it hallucination.", callout: "Treat output as a draft until evidence earns trust.", tone: "coral" },
+  { icon: "⌁", chapter: "RISK", label: "THE DATA GATE", title: "Pause before you paste.", copy: "Customer details, supplier pricing, RFQs, trace documents, contracts, export-controlled information, personal data, and internal records belong only in specifically approved tools and workflows.", callout: "Approved tool. Minimum data. Clear purpose.", tone: "yellow" },
+  { icon: "✎", chapter: "PRACTICE", label: "PROMPT BLUEPRINT", title: "Brief the tool like a new contractor.", copy: "State the goal, audience, relevant context, constraints, output format, and what to do when information is missing. Never ask it to hide uncertainty or manufacture completeness.", callout: "Goal + context + limits + format + checks.", tone: "blue" },
+  { icon: "✓", chapter: "CHECKPOINT", label: "FINAL PREFLIGHT", title: "A chatbot returns a confident lead time. What now?", copy: "Choose the action that makes trust proportional to the business and safety impact.", callout: "Pause → classify → minimize → verify.", tone: "purple", choices: [
+    { id: "source", label: "Verify it against the supplier response and DASI workflow", correct: true, coach: "Cleared. Independent evidence and the responsible workflow come before use." },
+    { id: "ask", label: "Ask the same chatbot if it is sure", correct: false, coach: "A self-check may help revise a draft, but it is not independent evidence." },
+    { id: "send", label: "Send it because the wording sounds precise", correct: false, coach: "Precision of tone does not prove accuracy." },
+  ] },
+];
+
+function AcademyBriefing({ step, answer, onAnswer }: { step: number; answer: string | null; onAnswer: (id: string) => void }) {
+  const slide = academySlides[step];
+  return <section className={`academy-card academy-${slide.tone}`}>
+    <div className="academy-visual" aria-hidden="true"><span>{slide.icon}</span><div className="ai-terminal"><b>AI COPILOT</b><i /><i /><i /><em>{step === 0 ? "predicts patterns" : step === 1 ? "creates a draft" : step === 2 ? "may sound certain" : step === 3 ? "waits at the gate" : "needs your review"}</em></div><div className="human-badge">HUMAN<br />IN CONTROL</div></div>
+    <div className="academy-copy"><span>{slide.chapter} · {slide.label}</span><h2>{slide.title}</h2><p>{slide.copy}</p>{slide.choices ? <div className="academy-choices">{slide.choices.map((choice) => <button aria-pressed={answer === choice.id} className={answer === choice.id ? (choice.correct ? "correct" : "incorrect") : ""} key={choice.id} onClick={() => onAnswer(choice.id)} type="button"><b>{choice.label}</b>{answer === choice.id && <small>{choice.coach}</small>}</button>)}</div> : <blockquote>{slide.callout}</blockquote>}</div>
+  </section>;
+}
+
+const storyBeats = [
+  {
+    speaker: "JORDAN",
+    role: "AI ENABLEMENT LEAD",
+    line: "Morning, Maya. Why does the AOG desk look like it has already lived three Tuesdays?",
+    direction: "Jordan arrives with coffee. Maya has an urgent customer RFQ open beside a public chatbot.",
+    lesson: "The pressure is realistic: a useful task, a short deadline, and an easy-looking shortcut.",
+    mood: "arrival",
+  },
+  {
+    speaker: "MAYA",
+    role: "AOG SOURCING COORDINATOR",
+    line: "A customer needs a fuel control unit. I have three supplier responses and need a clean sourcing update before the 10 a.m. handoff.",
+    direction: "Maya points to the RFQ. Customer details, direct contacts, quote references, and supplier pricing are visible.",
+    lesson: "AI may be appropriate for drafting, but the source material changes the risk.",
+    mood: "pressure",
+  },
+  {
+    speaker: "JORDAN",
+    role: "AI ENABLEMENT LEAD",
+    line: "A summary sounds useful. Is that chatbot approved for customer RFQs and supplier quotes?",
+    direction: "The cursor stops above the upload button.",
+    lesson: "Start with tool approval and data classification—not with prompt wording.",
+    mood: "pause",
+  },
+  {
+    speaker: "MAYA",
+    role: "AOG SOURCING COORDINATOR",
+    line: "Good catch. I was focused on speed. Help me keep what the summary needs and remove what it doesn’t.",
+    direction: "Maya moves the RFQ away from the upload area and opens the approved workflow guide.",
+    lesson: "Good AI use is not 'use it' or 'ban it.' It is choosing a safe workflow for the task.",
+    mood: "resolve",
+  },
+];
+
+function StoryScene({ beat }: { beat: number }) {
+  const current = storyBeats[beat];
+  return (
+    <section className={`story-stage story-${current.mood}`} aria-labelledby="story-dialogue">
+      <div className="story-slate"><span>DASI LEARNING STUDIOS</span><b>EP. 01 · THE AOG DATA CHECKPOINT</b><em>SCENE {beat + 1} / {storyBeats.length}</em></div>
+      <div className="story-set" aria-hidden="true">
+        <div className="story-window"><i /><i /><i /></div><div className="story-status"><b>AOG REQUEST</b><span>HANDOFF · 10:00</span><em>18 MIN LEFT</em></div>
+        <div className="story-actor maya"><i /><b /></div><div className="story-actor jordan"><i /><b /></div><div className="story-console"><span>SUPPLIER RESPONSES</span><i /><i /><i /></div>
+      </div>
+      <div className="story-dialogue" id="story-dialogue">
+        <span>{current.speaker} · {current.role}</span><blockquote>“{current.line}”</blockquote><small>STAGE DIRECTION · {current.direction}</small>
+      </div>
+      <aside className="director-note"><span>DIRECTOR’S NOTE</span><p>{current.lesson}</p></aside>
+    </section>
+  );
+}
+
+function OfficeScene({ stage, cleared = false }: { stage: number; cleared?: boolean }) {
   const bubble = [
-    "The chatbot could summarize this delay report in seconds. Can I paste the whole incident log?",
+    "The chatbot could compare these supplier responses in seconds. Can I paste the whole AOG request?",
     "Which details should leave the prompt before it goes anywhere?",
     "The data is clean. Now, how do we ask for a useful result?",
     "The draft looks polished. Are we cleared to send it?",
   ][stage];
 
   return (
-    <div className="scene" role="img" aria-label="Maya and Jordan at an aviation operations help desk">
+    <div className={`scene ${cleared ? "scene-cleared" : ""}`} role="img" aria-label="Maya and Jordan at the DASI aviation parts sourcing desk">
       <div className="scene-header">
-        <span><i className="record-dot" /> HELP DESK STUDIO · SCENE {String(stage + 1).padStart(2, "0")}</span>
-        <span>OPS SUPPORT · TUESDAY, 9:42 AM</span>
+        <span><i className="record-dot" /> AOG SOURCING DESK · SCENE {String(stage + 1).padStart(2, "0")}</span>
+        <span>PARTS & LOGISTICS · TUESDAY, 9:42 AM</span>
       </div>
       <div className="scene-grid" aria-hidden="true" />
       <div className="speech-bubble">
-        <span>MAYA · OPERATIONS COORDINATOR</span>
+        <span>MAYA · AOG SOURCING COORDINATOR</span>
         <strong>“{bubble}”</strong>
       </div>
       <div className="ops-board" aria-hidden="true">
-        <b>OPS STATUS</b>
-        <span>CA 184 · BOS <em>ON TIME</em></span>
-        <span>CA 219 · DCA <em className="delay">DELAY</em></span>
-        <span>CA 440 · MIA <em>ON TIME</em></span>
+        <b>AOG BOARD</b>
+        <span>RFQ 827 · ACTUATOR <em>SOURCING</em></span>
+        <span>RFQ 844 · FCU <em className="delay">URGENT</em></span>
+        <span>RFQ 851 · SENSOR <em>QUOTED</em></span>
       </div>
       <div className="cast" aria-hidden="true">
         <div className="person person-one"><i /><b /><span>MAYA</span></div>
@@ -157,7 +248,8 @@ function OfficeScene({ stage }: { stage: number }) {
         <div className="monitor"><i /><i /><i /></div>
         <div className="mug" />
       </div>
-      <div className="scene-caption">Your move: protect the data without grounding the work.</div>
+      <div className="scene-caption">Your move: protect the relationship without slowing the sourcing work.</div>
+      {cleared && <div className="scene-stamp" aria-hidden="true">SMART CALL! ✓</div>}
     </div>
   );
 }
@@ -217,21 +309,29 @@ export default function Home() {
   const [mode, setMode] = useState<AppMode>("loading");
   const [profile, setProfile] = useState<LearnerProfile | null>(null);
   const [view, setView] = useState<View>("dashboard");
+  const [storyBeat, setStoryBeat] = useState(0);
+  const [academyStep, setAcademyStep] = useState(0);
+  const [academyAnswer, setAcademyAnswer] = useState<string | null>(null);
   const [stage, setStage] = useState(0);
   const [mistakes, setMistakes] = useState(0);
+  const [stageMistakes, setStageMistakes] = useState([0, 0, 0, 0]);
   const [selected, setSelected] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{ correct: boolean; text: string } | null>(null);
   const [redactions, setRedactions] = useState<string[]>([]);
   const [learnerName, setLearnerName] = useState("");
   const [certificateId, setCertificateId] = useState("");
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "local">("idle");
 
   const score = Math.max(80, 100 - mistakes * 5);
+  const xp = stage * 25 + (view === "results" ? 25 : 0);
 
   useEffect(() => {
     const savedProfile = window.localStorage.getItem("cal-learner-profile-v1");
     if (savedProfile) {
       try {
         const parsed = JSON.parse(savedProfile) as LearnerProfile;
+        // Browser-owned progress is intentionally synchronized after hydration.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setProfile(parsed);
         setLearnerName(parsed.name);
         setMode("learner");
@@ -254,23 +354,28 @@ export default function Home() {
     }
   }, []);
 
-  const mastery = useMemo(
-    () => [
-      { name: "Safety", value: stage > 0 ? 84 : 72, color: "teal" },
-      { name: "Judgment", value: stage > 1 ? 76 : 61, color: "yellow" },
-      { name: "Verification", value: stage > 2 ? 78 : 52, color: "blue" },
-      { name: "Prompt craft", value: stage > 2 ? 73 : 46, color: "purple" },
-    ],
-    [stage],
-  );
+  const mastery = useMemo(() => {
+    const completedThrough = view === "results" ? 4 : stage + (feedback?.correct ? 1 : 0);
+    const measured = (minimum: number) => completedThrough >= minimum;
+    const value = (...steps: number[]) => Math.max(70, 100 - steps.reduce((total, index) => total + stageMistakes[index] * 10, 0));
+    return [
+      { name: "Safety", value: measured(2) ? value(0, 1) : null, color: "teal", evidence: "Tool + data choices" },
+      { name: "Judgment", value: measured(1) ? value(0) : null, color: "yellow", evidence: "Workflow decision" },
+      { name: "Prompt craft", value: measured(3) ? value(2) : null, color: "purple", evidence: "Prompt repair" },
+      { name: "Verification", value: measured(4) ? value(3) : null, color: "blue", evidence: "Source check" },
+    ];
+  }, [feedback?.correct, stage, stageMistakes, view]);
 
   function answer(choice: Choice) {
     setSelected(choice.id);
     setFeedback({ correct: choice.correct, text: choice.coach });
-    if (!choice.correct) setMistakes((count) => count + 1);
+    if (!choice.correct && selected !== choice.id) {
+      setMistakes((count) => count + 1);
+      setStageMistakes((values) => values.map((count, index) => index === stage ? count + 1 : count));
+    }
   }
 
-  function nextStage() {
+  async function nextStage() {
     if (!feedback?.correct) return;
     if (stage === 3) {
       const id = certificateId || `CAL-${new Date().getFullYear()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
@@ -280,11 +385,13 @@ export default function Home() {
         JSON.stringify({ completed: true, name: learnerName, certificateId: id }),
       );
       if (profile) {
-        void fetch("/api/completions", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...profile, score, certificateId: id }),
-        });
+        setSaveStatus("saving");
+        try {
+          const response = await fetch("/api/completions", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...profile, score, certificateId: id }) });
+          if (!response.ok) throw new Error("Completion could not be recorded");
+          const result = (await response.json()) as { durable?: boolean };
+          setSaveStatus(result.durable ? "saved" : "local");
+        } catch { setSaveStatus("local"); }
       }
       setView("results");
       return;
@@ -301,19 +408,26 @@ export default function Home() {
     setFeedback({
       correct,
       text: correct
-        ? "Clean handoff. You removed direct identifiers while keeping the operational facts needed for the task."
-        : "Not quite. Remove direct personal details and unique booking identifiers, but keep the operational facts needed for the summary.",
+        ? "Clean handoff. You removed customer and direct identifiers while keeping the sourcing and logistics facts needed for the task."
+        : "Not quite. Remove the customer, buyer contact, and unique RFQ reference, but keep the part need and logistics facts required for the update.",
     });
-    if (!correct) setMistakes((count) => count + 1);
+    if (!correct) {
+      setMistakes((count) => count + 1);
+      setStageMistakes((values) => values.map((count, index) => index === 1 ? count + 1 : count));
+    }
   }
 
   function resetCourse() {
     setView("dashboard");
     setStage(0);
     setMistakes(0);
+    setStageMistakes([0, 0, 0, 0]);
     setSelected(null);
     setFeedback(null);
     setRedactions([]);
+    setStoryBeat(0);
+    setAcademyStep(0);
+    setAcademyAnswer(null);
   }
 
   function completeOnboarding(nextProfile: LearnerProfile) {
@@ -343,36 +457,67 @@ export default function Home() {
       <MissionRail />
       <section className="workspace">
         <header className="topbar">
-          <div><span className="edition-chip">AVIATION OPERATIONS EDITION</span><span className="status-chip"><i /> Progress connected</span></div>
+          <div><span className="edition-chip">DASI · AVIATION PARTS & LOGISTICS</span><span className="status-chip"><i /> Progress connected</span></div>
           <div className="learner-controls"><button className="topbar-admin" type="button" onClick={() => setMode("admin")}>Admin</button><button className="topbar-switch" type="button" onClick={() => { window.localStorage.removeItem("cal-learner-profile-v1"); setProfile(null); setMode("onboarding"); }}>Switch learner</button><div className="profile"><span>{initials}</span><p><strong>{profile?.name}</strong><small>{profile?.role || "Learner"} · {profile?.skillLevel}</small></p></div></div>
         </header>
 
         {view === "dashboard" && (
           <div className="dashboard page-enter">
-            <div className="episode-kicker"><span>EPISODE 01</span><i /> DATA SAFETY PILOT</div>
+            <div className="episode-kicker"><span>EPISODE 01</span><i /> DASI AI SAFETY PILOT</div>
             <div className="dashboard-heading">
-              <div><h1>The Data Safety<br />Checkpoint</h1><p>Help the crew use AI without sending sensitive information somewhere it does not belong.</p></div>
-              <div className="time-card"><small>ESTIMATED TIME</small><strong>6 min</strong><span>Interactive scenario</span></div>
+              <div><h1>The AOG Data<br />Checkpoint</h1><p>Help the DASI team use AI without exposing customer, supplier, pricing, or sourcing information.</p></div>
+              <div className="time-card"><small>ESTIMATED TIME</small><strong>15 min</strong><span>Briefing + scenario</span></div>
             </div>
             <div className="dashboard-grid">
               <div>
                 <OfficeScene stage={0} />
                 <div className="mission-brief comic-box">
-                  <div><span className="caption-label">TODAY’S CALL</span><h2>Can a chatbot see this incident report?</h2><p>Choose a safe tool, remove unnecessary data, build a useful prompt, and verify the result.</p></div>
-                  <button className="primary-button" type="button" onClick={() => setView("mission")}>Start mission <span>→</span></button>
+                  <div><span className="caption-label">TODAY’S CALL</span><h2>Can a chatbot see this urgent sourcing request?</h2><p>Take a fast AI preflight, watch the AOG desk scene, then choose a safe tool, minimize data, build a useful prompt, and verify the result.</p></div>
+                  <button className="primary-button" type="button" onClick={() => { setAcademyStep(0); setAcademyAnswer(null); setView("academy"); }}>Begin training <span>▶</span></button>
+                </div>
+                <div className="mission-objectives" aria-label="Mission objectives">
+                  <article><span>01</span><p><strong>Protect the relationship</strong><small>Spot customer and supplier details that do not belong in a prompt.</small></p></article>
+                  <article><span>02</span><p><strong>Coach the chatbot</strong><small>Turn a vague request into a useful instruction.</small></p></article>
+                  <article><span>03</span><p><strong>Keep a human accountable</strong><small>Verify before a polished sourcing update leaves the desk.</small></p></article>
                 </div>
               </div>
               <aside className="mastery-panel comic-box">
-                <div className="panel-title"><div><span>MASTERY RADAR</span><h2>Skills that update as you play</h2></div><b>LIVE</b></div>
+                <div className="panel-title"><div><span>EPISODE SKILL CHECK</span><h2>Evidence from your choices</h2></div><b>SESSION</b></div>
                 {mastery.map((item) => (
-                  <div className="mastery-row" key={item.name}>
-                    <span><b>{item.name}</b><b>{item.value}%</b></span>
-                    <i><b className={item.color} style={{ width: `${item.value}%` }} /></i>
+                  <div className={`mastery-row ${item.value === null ? "pending" : ""}`} key={item.name}>
+                    <span><b>{item.name}</b><b>{item.value === null ? "—" : `${item.value}%`}</b></span>
+                    <i><b className={item.color} style={{ width: `${item.value ?? 0}%` }} /></i>
+                    <small>{item.value === null ? "Not assessed yet" : item.evidence}</small>
                   </div>
                 ))}
-                <div className="desk-note"><span>DESK NOTE</span><strong>Pause → classify → minimize → verify.</strong><p>The safest prompt starts before you type.</p></div>
+                <div className="mastery-explainer"><b>How this works</b><p>Each skill unlocks only after its related decision. Coaching attempts affect the session score; unplayed skills stay blank.</p></div>
+                <div className="desk-note"><span>DESK NOTE</span><strong>Pause → classify → minimize → verify.</strong><p>These are episode results—not a permanent rating of you.</p></div>
                 <div className="certificate-teaser"><span>☆</span><p><strong>Certificate unlocked at the finish</strong><small>Complete the final coached challenge to export your record.</small></p></div>
               </aside>
+            </div>
+          </div>
+        )}
+
+        {view === "academy" && (
+          <div className="academy-player page-enter">
+            <header className="academy-header"><div><span className="episode-kicker"><span>AI PREFLIGHT</span><i /> LEARN + PRACTICE</span><h1>First, build your AI instincts.</h1><p>Eight short cards based on recognized AI risk-management and literacy guidance—translated into DASI work.</p></div><div className="academy-count"><strong>{String(academyStep + 1).padStart(2, "0")}</strong><span>/ {String(academySlides.length).padStart(2, "0")}</span></div></header>
+            <div className="academy-progress" style={{ gridTemplateColumns: `repeat(${academySlides.length}, 1fr)` }} aria-label={`AI preflight card ${academyStep + 1} of ${academySlides.length}`}>{academySlides.map((slide, index) => <i className={index <= academyStep ? "active" : ""} key={slide.label} />)}</div>
+            <AcademyBriefing step={academyStep} answer={academyAnswer} onAnswer={setAcademyAnswer} />
+            <div className="academy-controls"><button className="back-button" disabled={academyStep === 0} type="button" onClick={() => { setAcademyAnswer(null); setAcademyStep((value) => Math.max(0, value - 1)); }}>← Back</button><span>{academySlides[academyStep].chapter} · Card {academyStep + 1} of {academySlides.length}</span>{academyStep < academySlides.length - 1 ? <button className="primary-button compact" disabled={Boolean(academySlides[academyStep].choices) && !academySlides[academyStep].choices?.find((choice) => choice.id === academyAnswer)?.correct} type="button" onClick={() => { setAcademyAnswer(null); setAcademyStep((value) => value + 1); }}>{academySlides[academyStep].choices ? "Check cleared" : "Got it — next"} <span>→</span></button> : <button className="primary-button compact" disabled={!academySlides[academyStep].choices?.find((choice) => choice.id === academyAnswer)?.correct} type="button" onClick={() => { setStoryBeat(0); setView("story"); }}>Watch the scenario <span>▶</span></button>}</div>
+          </div>
+        )}
+
+        {view === "story" && (
+          <div className="story-player page-enter">
+            <header className="story-player-header"><div><span className="episode-kicker"><span>DASI AOG DESK</span><i /> WATCH THE SCENE</span><h1>Now see it at work.</h1><p>Meet the sourcing crew, see the pressure they are under, and notice where the AI risk begins.</p></div><button className="text-button" type="button" onClick={() => setView("mission")}>Skip to decision</button></header>
+            <div className="story-timeline" aria-label={`Scene ${storyBeat + 1} of ${storyBeats.length}`}>{storyBeats.map((_, index) => <i className={index <= storyBeat ? "active" : ""} key={index}><span /></i>)}</div>
+            <StoryScene beat={storyBeat} />
+            <div className="story-controls">
+              <button className="back-button" disabled={storyBeat === 0} type="button" onClick={() => setStoryBeat((value) => Math.max(0, value - 1))}>← Previous line</button>
+              <span><kbd>Tip</kbd> Read it like a scene. The details become your evidence.</span>
+              {storyBeat < storyBeats.length - 1
+                ? <button className="primary-button compact" type="button" onClick={() => setStoryBeat((value) => value + 1)}>Continue scene <span>→</span></button>
+                : <button className="primary-button compact" type="button" onClick={() => setView("mission")}>Make the call <span>→</span></button>}
             </div>
           </div>
         )}
@@ -384,7 +529,9 @@ export default function Home() {
                 <div className={index < stage ? "done" : index === stage ? "active" : ""} key={label}><span>{index < stage ? "✓" : index + 1}</span><b>{label}</b></div>
               ))}
             </div>
-            <OfficeScene stage={stage} />
+            <div className="mission-hud"><span><b>CREW XP</b><strong>{xp}/100</strong></span><i><b style={{ width: `${xp}%` }} /></i><em>{stageDetails[stage].reward} ready</em></div>
+            <div className="live-skill-strip" aria-label="Live episode skill evidence">{mastery.map((item) => <span className={item.value === null ? "pending" : "measured"} key={item.name}><b>{item.name}</b><em>{item.value === null ? "Waiting" : `${item.value}%`}</em></span>)}</div>
+            <OfficeScene stage={stage} cleared={Boolean(feedback?.correct)} />
             <section className="challenge comic-box">
               <div className="challenge-heading">
                 <span className="caption-label">CHALLENGE {stage + 1} OF 4</span>
@@ -395,8 +542,8 @@ export default function Home() {
                   "What happens before this draft is shared?",
                 ][stage]}</h1>
                 <p>{[
-                  "The report is internal and the public chatbot has not been approved for company data.",
-                  "The task needs operational context—not a customer’s identity.",
+                  "The RFQ and supplier responses are internal, and the public chatbot is not approved for DASI data.",
+                  "The task needs sourcing and logistics context—not the customer’s identity.",
                   "A strong prompt defines the task, audience, format, and limits.",
                   "The chatbot produced a clean three-bullet summary with a confident tone.",
                 ][stage]}</p>
@@ -405,7 +552,7 @@ export default function Home() {
               {stage === 0 && <ChoiceCards choices={firstChoices} selected={selected} onChoose={answer} />}
               {stage === 1 && (
                 <div className="redaction-board">
-                  <div className="report-header"><span>INCIDENT NOTE · INTERNAL</span><b>Select details to redact</b></div>
+                  <div className="report-header"><span>AOG SOURCING BRIEF · INTERNAL</span><b>Select details to redact</b></div>
                   <div className="data-chips">
                     {dataItems.map((item) => {
                       const checked = redactions.includes(item.id);
@@ -435,9 +582,10 @@ export default function Home() {
                 <div className={`feedback ${feedback.correct ? "correct" : "coach"}`} role="status">
                   <span>{feedback.correct ? "✓" : "!"}</span>
                   <p><strong>{feedback.correct ? "Cleared for the next step" : "Coaching moment"}</strong>{feedback.text}</p>
-                  {feedback.correct && <button type="button" onClick={nextStage}>{stage === 3 ? "See my results" : "Next scene"} →</button>}
+                  {feedback.correct && <button type="button" disabled={saveStatus === "saving"} onClick={() => void nextStage()}>{saveStatus === "saving" ? "Saving…" : stage === 3 ? "See my results" : "Next scene"} →</button>}
                 </div>
               )}
+              {feedback?.correct && <div className="consequence-card"><span>{stageDetails[stage].eyebrow}</span><p><strong>What changed?</strong>{stageDetails[stage].consequence}</p><b>{stageDetails[stage].reward}</b></div>}
             </section>
           </div>
         )}
@@ -448,6 +596,8 @@ export default function Home() {
             <span className="episode-kicker">MISSION COMPLETE</span>
             <h1>Nice call, crew member.</h1>
             <p>You protected the data, repaired the prompt, and kept a qualified person in control of the final decision.</p>
+            {saveStatus === "saved" && <div className="feedback correct" role="status"><span>✓</span><p><strong>Completion connected</strong>Your result is available in the admin report.</p></div>}
+            {saveStatus === "local" && <div className="feedback coach" role="status"><span>!</span><p><strong>Saved on this device</strong>Connect pilot storage in Vercel to make completion records durable.</p></div>}
             <div className="result-grid">
               <section className="score-card comic-box">
                 <span className="score-ring"><b>{score}</b><small>mastery</small></span>
@@ -455,6 +605,11 @@ export default function Home() {
               </section>
               <section className="takeaway-card comic-box"><span>KEEP THIS RULE</span><h2>Pause. Classify. Minimize. Verify.</h2><p>Use only approved tools, share only the data needed, and review important outputs against a trusted source.</p></section>
             </div>
+            <section className="badge-shelf comic-box" aria-label="Mission rewards">
+              <div><span className="badge-icon">◈</span><p><small>BADGE EARNED</small><strong>Data Shield</strong></p></div>
+              <div><span className="badge-icon verify">✓</span><p><small>HABIT UNLOCKED</small><strong>Trust, then verify</strong></p></div>
+              <div><span className="badge-icon xp">100</span><p><small>CREW XP</small><strong>Full mission credit</strong></p></div>
+            </section>
             <section className="certificate-form comic-box">
               <div><span className="caption-label">COMPLETION RECORD</span><h2>Make the certificate yours</h2><p>Enter the learner name exactly as it should appear on the printable certificate.</p></div>
               <label><span>Learner name</span><input value={learnerName} onChange={(event) => setLearnerName(event.target.value)} placeholder="Enter full name" /></label>
@@ -481,7 +636,7 @@ export default function Home() {
           <h1>{learnerName || "Learner Name"}</h1>
           <p>successfully completed</p>
           <h2>AI Chatbots: Intro 101 — Pilot Mission</h2>
-          <h3>Data Safety Checkpoint · Aviation Operations Edition</h3>
+          <h3>AOG Data Checkpoint · DASI Aviation Parts & Logistics</h3>
           <div className="certificate-meta"><span><small>COMPLETED</small>{new Intl.DateTimeFormat("en-US", { dateStyle: "long" }).format(new Date())}</span><span><small>MASTERY</small>{score}%</span><span><small>CERTIFICATE ID</small>{certificateId}</span></div>
           <div className="certificate-rule">Pause · Classify · Minimize · Verify</div>
         </div>

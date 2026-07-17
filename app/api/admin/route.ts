@@ -1,133 +1,61 @@
-import { and, asc, desc, eq } from "drizzle-orm";
-import { getDb } from "../../../db";
-import { assignments, completions, learners, organizationSettings } from "../../../db/schema";
+import { hasDurableStore, readStore, writeStore } from "../../../db";
 import { isAdminRequest } from "./_auth";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 const defaultSettings = {
-  organizationName: "Ctrl+Alt+Learn Pilot Team",
-  industry: "Aviation",
-  passingScore: "80",
-  certificatesEnabled: "true",
-  coursePublished: "true",
-  reminderDays: "7",
+  organizationName: "DASI", industry: "Aviation Parts & Logistics", passingScore: "80",
+  certificatesEnabled: "true", coursePublished: "true", reminderDays: "7",
   policyNote: "Use only company-approved AI tools. Do not enter confidential, personal, regulated, or safety-sensitive information unless the workflow is explicitly approved.",
 };
 
 async function unauthorized(request: Request) {
-  return !(await isAdminRequest(request))
-    ? Response.json({ error: "Admin session required" }, { status: 401 })
-    : null;
+  return !(await isAdminRequest(request)) ? Response.json({ error: "Admin session required" }, { status: 401 }) : null;
 }
 
 export async function GET(request: Request) {
-  const denied = await unauthorized(request);
-  if (denied) return denied;
-
-  const db = getDb();
-  const [people, assigned, completed, storedSettings] = await Promise.all([
-    db.select().from(learners).orderBy(asc(learners.name)),
-    db
-      .select({
-        id: assignments.id,
-        learnerId: assignments.learnerId,
-        learnerName: learners.name,
-        learnerEmail: learners.email,
-        courseId: assignments.courseId,
-        dueDate: assignments.dueDate,
-        status: assignments.status,
-        createdAt: assignments.createdAt,
-      })
-      .from(assignments)
-      .innerJoin(learners, eq(assignments.learnerId, learners.id))
-      .orderBy(desc(assignments.createdAt)),
-    db
-      .select({
-        id: completions.id,
-        learnerName: learners.name,
-        learnerEmail: learners.email,
-        courseId: completions.courseId,
-        score: completions.score,
-        certificateId: completions.certificateId,
-        completedAt: completions.completedAt,
-      })
-      .from(completions)
-      .innerJoin(learners, eq(completions.learnerId, learners.id))
-      .orderBy(desc(completions.completedAt)),
-    db.select().from(organizationSettings),
-  ]);
-
-  const settings = { ...defaultSettings } as Record<string, string>;
-  for (const row of storedSettings) settings[row.key] = row.value;
-
-  return Response.json({ learners: people, assignments: assigned, completions: completed, settings });
+  const denied = await unauthorized(request); if (denied) return denied;
+  const store = await readStore();
+  const learnersById = new Map(store.learners.map((learner) => [learner.id, learner]));
+  const assignments = store.assignments.map((item) => ({ ...item, learnerName: learnersById.get(item.learnerId)?.name ?? "Unknown learner", learnerEmail: learnersById.get(item.learnerId)?.email ?? "" }));
+  const completions = store.completions.map((item) => ({ ...item, learnerName: learnersById.get(item.learnerId)?.name ?? "Unknown learner", learnerEmail: learnersById.get(item.learnerId)?.email ?? "" }));
+  return Response.json({ learners: store.learners, assignments, completions, settings: { ...defaultSettings, ...store.settings }, durableStorage: hasDurableStore() });
 }
 
 export async function POST(request: Request) {
-  const denied = await unauthorized(request);
-  if (denied) return denied;
-
+  const denied = await unauthorized(request); if (denied) return denied;
   const payload = (await request.json()) as Record<string, unknown>;
   const action = String(payload.action ?? "");
-  const db = getDb();
+  const store = await readStore();
 
   if (action === "createLearner") {
-    const name = String(payload.name ?? "").trim();
-    const email = String(payload.email ?? "").trim().toLowerCase();
-    const department = String(payload.department ?? "General").trim();
-    const skillLevel = String(payload.skillLevel ?? "Beginner").trim();
+    const name = String(payload.name ?? "").trim(); const email = String(payload.email ?? "").trim().toLowerCase();
     if (!name || !email) return Response.json({ error: "Name and email are required" }, { status: 400 });
+    if (store.learners.some((item) => item.email === email)) return Response.json({ error: "That email is already in the roster" }, { status: 409 });
     const id = crypto.randomUUID();
-    await db.insert(learners).values({ id, name, email, department, skillLevel, createdAt: new Date() });
-    return Response.json({ id }, { status: 201 });
+    store.learners.push({ id, name, email, department: String(payload.department ?? "General").trim(), skillLevel: String(payload.skillLevel ?? "Beginner").trim(), status: "active", createdAt: new Date().toISOString() });
+    await writeStore(store); return Response.json({ id }, { status: 201 });
   }
-
   if (action === "createAssignment") {
-    const learnerId = String(payload.learnerId ?? "");
-    if (!learnerId) return Response.json({ error: "Choose a learner" }, { status: 400 });
-    const courseId = String(payload.courseId ?? "intro-101");
-    const existing = await db
-      .select({ id: assignments.id })
-      .from(assignments)
-      .where(and(eq(assignments.learnerId, learnerId), eq(assignments.courseId, courseId)))
-      .limit(1);
-    if (existing.length) return Response.json({ error: "This course is already assigned" }, { status: 409 });
-    const id = crypto.randomUUID();
-    await db.insert(assignments).values({
-      id,
-      learnerId,
-      courseId,
-      dueDate: String(payload.dueDate ?? "") || null,
-      createdAt: new Date(),
-    });
-    return Response.json({ id }, { status: 201 });
+    const learnerId = String(payload.learnerId ?? ""); const courseId = String(payload.courseId ?? "intro-101");
+    if (!store.learners.some((item) => item.id === learnerId)) return Response.json({ error: "Choose a valid learner" }, { status: 400 });
+    if (store.assignments.some((item) => item.learnerId === learnerId && item.courseId === courseId)) return Response.json({ error: "This course is already assigned" }, { status: 409 });
+    const id = crypto.randomUUID(); store.assignments.push({ id, learnerId, courseId, dueDate: String(payload.dueDate ?? "") || null, status: "assigned", createdAt: new Date().toISOString() });
+    await writeStore(store); return Response.json({ id }, { status: 201 });
   }
-
   if (action === "saveSettings") {
-    const values = (payload.settings ?? {}) as Record<string, unknown>;
-    for (const [key, value] of Object.entries(values)) {
-      await db
-        .insert(organizationSettings)
-        .values({ key, value: String(value), updatedAt: new Date() })
-        .onConflictDoUpdate({ target: organizationSettings.key, set: { value: String(value), updatedAt: new Date() } });
-    }
-    return Response.json({ saved: true });
+    for (const [key, value] of Object.entries((payload.settings ?? {}) as Record<string, unknown>)) store.settings[key] = String(value);
+    await writeStore(store); return Response.json({ saved: true });
   }
-
   if (action === "updateAssignment") {
-    await db
-      .update(assignments)
-      .set({ status: String(payload.status ?? "assigned") })
-      .where(eq(assignments.id, String(payload.id ?? "")));
-    return Response.json({ updated: true });
+    const item = store.assignments.find((assignment) => assignment.id === String(payload.id ?? ""));
+    if (!item) return Response.json({ error: "Assignment not found" }, { status: 404 });
+    item.status = String(payload.status ?? "assigned"); await writeStore(store); return Response.json({ updated: true });
   }
-
   if (action === "deleteLearner") {
-    const learnerId = String(payload.id ?? "");
-    await db.delete(assignments).where(eq(assignments.learnerId, learnerId));
-    await db.delete(completions).where(eq(completions.learnerId, learnerId));
-    await db.delete(learners).where(eq(learners.id, learnerId));
-    return Response.json({ deleted: true });
+    const id = String(payload.id ?? ""); store.learners = store.learners.filter((item) => item.id !== id); store.assignments = store.assignments.filter((item) => item.learnerId !== id); store.completions = store.completions.filter((item) => item.learnerId !== id);
+    await writeStore(store); return Response.json({ deleted: true });
   }
-
   return Response.json({ error: "Unknown admin action" }, { status: 400 });
 }
