@@ -1,6 +1,6 @@
 # Ctrl+Alt+Learn
 
-An interactive, workplace-sitcom-style AI literacy pilot. The current vertical slice includes four-step learner onboarding, a six-minute aviation data-safety mission, printable certificates, and an administrator control room for rosters, assignments, settings, and completion reports.
+An interactive, workplace-sitcom-style AI literacy pilot for DASI. The current vertical slice includes onboarding, a five-card AI preflight, an acted aviation-parts sourcing scenario, interactive decisions, printable certificates, and an administrator control room.
 
 ## Run locally
 

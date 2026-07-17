@@ -24,9 +24,13 @@ test("ships guided learner onboarding", async () => {
   assert.match(page, /CREW XP/);
   assert.match(page, /What changed\?/);
   assert.match(page, /Data Shield/);
-  assert.match(page, /Before you make the call/);
+  assert.match(page, /Now see it at work/);
   assert.match(page, /DIRECTOR’S NOTE/);
   assert.match(page, /Make the call/);
+  assert.match(page, /AI PREFLIGHT/);
+  assert.match(page, /Fluent is not the same as factual/);
+  assert.match(page, /DASI · AVIATION PARTS & LOGISTICS/);
+  assert.match(page, /AOG SOURCING COORDINATOR/);
 });
 
 test("protects admin routes with an HTTP-only session cookie", async () => {

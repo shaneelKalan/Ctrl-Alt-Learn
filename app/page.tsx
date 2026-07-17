@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AdminPortal } from "./AdminPortal";
 import { LearnerProfile, Onboarding } from "./Onboarding";
 
-type View = "dashboard" | "story" | "mission" | "results";
+type View = "dashboard" | "academy" | "story" | "mission" | "results";
 type AppMode = "loading" | "onboarding" | "learner" | "admin";
 
 type Choice = {
@@ -16,7 +16,7 @@ type Choice = {
 };
 
 const missions = [
-  { id: 1, title: "The Data Safety Checkpoint", state: "current" },
+  { id: 1, title: "The AOG Data Checkpoint", state: "current" },
   { id: 2, title: "Meet Your AI Teammate", state: "next" },
   { id: 3, title: "What AI Does Well", state: "locked" },
   { id: 4, title: "Spot the Confident Guess", state: "locked" },
@@ -29,11 +29,11 @@ const missions = [
 const firstChoices: Choice[] = [
   {
     id: "paste",
-    label: "Paste the entire report",
-    detail: "The chatbot can summarize it fastest if it sees everything.",
+    label: "Paste the entire RFQ and quotes",
+    detail: "The chatbot can compare them fastest if it sees everything.",
     correct: false,
     coach:
-      "Fast is not automatically safe. The report contains personal and internal information, and the tool has not been approved.",
+      "Fast is not automatically safe. The RFQ and quotes contain customer, supplier, pricing, and internal information, and the tool has not been approved.",
   },
   {
     id: "pause",
@@ -54,16 +54,16 @@ const firstChoices: Choice[] = [
 ];
 
 const dataItems = [
-  { id: "name", text: "Customer: Elena Ruiz", sensitive: true, tag: "Personal" },
-  { id: "booking", text: "Booking ref: K7M2Q9", sensitive: true, tag: "Identifier" },
-  { id: "route", text: "Route: BOS → DCA", sensitive: false, tag: "Operational" },
+  { id: "name", text: "Customer: Northstar Aviation", sensitive: true, tag: "Customer" },
+  { id: "booking", text: "RFQ ref: DASI-84729", sensitive: true, tag: "Identifier" },
+  { id: "route", text: "Logistics lane: MIA → DFW", sensitive: false, tag: "Logistics" },
   {
     id: "reason",
-    text: "Delay: crew scheduling issue",
+    text: "Part needed: fuel control unit",
     sensitive: false,
     tag: "Operational",
   },
-  { id: "phone", text: "Phone: (617) 555-0142", sensitive: true, tag: "Personal" },
+  { id: "phone", text: "Buyer mobile: (305) 555-0142", sensitive: true, tag: "Personal" },
 ];
 
 const promptChoices: Choice[] = [
@@ -77,7 +77,7 @@ const promptChoices: Choice[] = [
   },
   {
     id: "safe",
-    label: "Create a customer-safe operations summary",
+    label: "Create a customer-safe sourcing update",
     detail:
       "Use the redacted note. Return three bullets, separate facts from assumptions, and flag missing information.",
     correct: true,
@@ -86,11 +86,11 @@ const promptChoices: Choice[] = [
   },
   {
     id: "creative",
-    label: "Make the delay sound harmless",
-    detail: "Fill in any missing details so the message feels complete.",
+    label: "Make the sourcing update sound confirmed",
+    detail: "Fill in missing availability and lead-time details so the message feels complete.",
     correct: false,
     coach:
-      "AI should not soften safety-relevant facts or invent missing details. Accuracy and appropriate review matter more than polish.",
+      "AI should not invent stock, trace, price, or lead-time details. Accuracy and appropriate review matter more than polish.",
   },
 ];
 
@@ -107,7 +107,7 @@ const verifyChoices: Choice[] = [
     id: "review",
     label: "Check the source and route it for review",
     detail:
-      "Confirm every claim against the redacted report, then use the normal operational approval process.",
+      "Confirm every claim against the approved source material, then use the normal DASI review process.",
     correct: true,
     coach:
       "That keeps a person accountable. Verification should match the impact of the output.",
@@ -125,42 +125,58 @@ const verifyChoices: Choice[] = [
 const stageLabels = ["Choose", "Classify", "Prompt", "Verify"];
 
 const stageDetails = [
-  { eyebrow: "TOOL CHECK", reward: "+25 XP", consequence: "The incident log stays inside approved systems." },
-  { eyebrow: "DATA SHIELD", reward: "+25 XP", consequence: "Maya keeps the useful facts without exposing a customer." },
+  { eyebrow: "TOOL CHECK", reward: "+25 XP", consequence: "The AOG request stays inside DASI-approved systems." },
+  { eyebrow: "DATA SHIELD", reward: "+25 XP", consequence: "Maya keeps the useful sourcing facts without exposing a customer." },
   { eyebrow: "PROMPT POWER", reward: "+25 XP", consequence: "The chatbot gets a clear job—and no permission to invent." },
   { eyebrow: "HUMAN CONTROL", reward: "+25 XP", consequence: "A qualified reviewer stays accountable for what leaves the desk." },
 ];
+
+const academySlides = [
+  { icon: "✦", label: "AI IN 20 SECONDS", title: "A very fast pattern machine.", copy: "Generative AI predicts useful words, images, and code from patterns it learned. It can sound human, but it does not understand a customer, a part, or an airworthiness requirement the way you do.", callout: "Fluent is not the same as factual.", tone: "blue" },
+  { icon: "⚡", label: "GREEN-LIGHT WORK", title: "Give it the blank-page jobs.", copy: "AI can help brainstorm, rewrite, summarize approved text, create a first draft, explain a concept, or format information. Use it to accelerate work—not to replace qualified judgment.", callout: "Draft faster. Decide like a human.", tone: "teal" },
+  { icon: "?", label: "TURBULENCE AHEAD", title: "Confidence can be counterfeit.", copy: "AI can invent facts, miss context, repeat bias, use stale information, or produce a believable wrong answer. Asking the same chatbot whether it is correct is not independent verification.", callout: "Check the source, not the tone.", tone: "coral" },
+  { icon: "⌁", label: "THE DATA GATE", title: "Pause before you paste.", copy: "Customer details, supplier pricing, RFQs, trace documents, contracts, export-controlled information, personal data, and internal records belong only in specifically approved tools and workflows.", callout: "Approved tool. Minimum data. Clear purpose.", tone: "yellow" },
+  { icon: "✓", label: "YOUR HUMAN CHECKLIST", title: "You remain accountable.", copy: "Before using AI output, verify important claims against the source, follow DASI procedures, involve the qualified owner, and stop when the task is safety-critical, regulated, or outside your authority.", callout: "Pause → classify → minimize → verify.", tone: "purple" },
+];
+
+function AcademyBriefing({ step }: { step: number }) {
+  const slide = academySlides[step];
+  return <section className={`academy-card academy-${slide.tone}`}>
+    <div className="academy-visual" aria-hidden="true"><span>{slide.icon}</span><div className="ai-terminal"><b>AI COPILOT</b><i /><i /><i /><em>{step === 0 ? "predicts patterns" : step === 1 ? "creates a draft" : step === 2 ? "may sound certain" : step === 3 ? "waits at the gate" : "needs your review"}</em></div><div className="human-badge">HUMAN<br />IN CONTROL</div></div>
+    <div className="academy-copy"><span>{slide.label}</span><h2>{slide.title}</h2><p>{slide.copy}</p><blockquote>{slide.callout}</blockquote></div>
+  </section>;
+}
 
 const storyBeats = [
   {
     speaker: "JORDAN",
     role: "AI ENABLEMENT LEAD",
-    line: "Morning, Maya. Why is the delay desk flashing like a holiday display?",
-    direction: "Jordan arrives with coffee. Maya has an incident report open beside a public chatbot.",
+    line: "Morning, Maya. Why does the AOG desk look like it has already lived three Tuesdays?",
+    direction: "Jordan arrives with coffee. Maya has an urgent customer RFQ open beside a public chatbot.",
     lesson: "The pressure is realistic: a useful task, a short deadline, and an easy-looking shortcut.",
     mood: "arrival",
   },
   {
     speaker: "MAYA",
-    role: "OPERATIONS COORDINATOR",
-    line: "Flight 219 was delayed. I need a customer-safe summary before the 10 a.m. briefing—and this report is six pages long.",
-    direction: "Maya points to the report. Names, contact details, and a booking reference are visible.",
+    role: "AOG SOURCING COORDINATOR",
+    line: "A customer needs a fuel control unit. I have three supplier responses and need a clean sourcing update before the 10 a.m. handoff.",
+    direction: "Maya points to the RFQ. Customer details, direct contacts, quote references, and supplier pricing are visible.",
     lesson: "AI may be appropriate for drafting, but the source material changes the risk.",
     mood: "pressure",
   },
   {
     speaker: "JORDAN",
     role: "AI ENABLEMENT LEAD",
-    line: "A summary sounds reasonable. Is that chatbot approved for internal incident information?",
+    line: "A summary sounds useful. Is that chatbot approved for customer RFQs and supplier quotes?",
     direction: "The cursor stops above the upload button.",
     lesson: "Start with tool approval and data classification—not with prompt wording.",
     mood: "pause",
   },
   {
     speaker: "MAYA",
-    role: "OPERATIONS COORDINATOR",
+    role: "AOG SOURCING COORDINATOR",
     line: "Good catch. I was focused on speed. Help me keep what the summary needs and remove what it doesn’t.",
-    direction: "Maya moves the report away from the upload area and opens the approved workflow guide.",
+    direction: "Maya moves the RFQ away from the upload area and opens the approved workflow guide.",
     lesson: "Good AI use is not 'use it' or 'ban it.' It is choosing a safe workflow for the task.",
     mood: "resolve",
   },
@@ -170,10 +186,10 @@ function StoryScene({ beat }: { beat: number }) {
   const current = storyBeats[beat];
   return (
     <section className={`story-stage story-${current.mood}`} aria-labelledby="story-dialogue">
-      <div className="story-slate"><span>CTRL+ALT+LEARN STUDIOS</span><b>EP. 01 · THE DATA SAFETY CHECKPOINT</b><em>SCENE {beat + 1} / {storyBeats.length}</em></div>
+      <div className="story-slate"><span>DASI LEARNING STUDIOS</span><b>EP. 01 · THE AOG DATA CHECKPOINT</b><em>SCENE {beat + 1} / {storyBeats.length}</em></div>
       <div className="story-set" aria-hidden="true">
-        <div className="story-window"><i /><i /><i /></div><div className="story-status"><b>FLIGHT 219</b><span>BRIEFING · 10:00</span><em>18 MIN LEFT</em></div>
-        <div className="story-actor maya"><i /><b /></div><div className="story-actor jordan"><i /><b /></div><div className="story-console"><span>INCIDENT REPORT</span><i /><i /><i /></div>
+        <div className="story-window"><i /><i /><i /></div><div className="story-status"><b>AOG REQUEST</b><span>HANDOFF · 10:00</span><em>18 MIN LEFT</em></div>
+        <div className="story-actor maya"><i /><b /></div><div className="story-actor jordan"><i /><b /></div><div className="story-console"><span>SUPPLIER RESPONSES</span><i /><i /><i /></div>
       </div>
       <div className="story-dialogue" id="story-dialogue">
         <span>{current.speaker} · {current.role}</span><blockquote>“{current.line}”</blockquote><small>STAGE DIRECTION · {current.direction}</small>
@@ -185,28 +201,28 @@ function StoryScene({ beat }: { beat: number }) {
 
 function OfficeScene({ stage, cleared = false }: { stage: number; cleared?: boolean }) {
   const bubble = [
-    "The chatbot could summarize this delay report in seconds. Can I paste the whole incident log?",
+    "The chatbot could compare these supplier responses in seconds. Can I paste the whole AOG request?",
     "Which details should leave the prompt before it goes anywhere?",
     "The data is clean. Now, how do we ask for a useful result?",
     "The draft looks polished. Are we cleared to send it?",
   ][stage];
 
   return (
-    <div className={`scene ${cleared ? "scene-cleared" : ""}`} role="img" aria-label="Maya and Jordan at an aviation operations help desk">
+    <div className={`scene ${cleared ? "scene-cleared" : ""}`} role="img" aria-label="Maya and Jordan at the DASI aviation parts sourcing desk">
       <div className="scene-header">
-        <span><i className="record-dot" /> HELP DESK STUDIO · SCENE {String(stage + 1).padStart(2, "0")}</span>
-        <span>OPS SUPPORT · TUESDAY, 9:42 AM</span>
+        <span><i className="record-dot" /> AOG SOURCING DESK · SCENE {String(stage + 1).padStart(2, "0")}</span>
+        <span>PARTS & LOGISTICS · TUESDAY, 9:42 AM</span>
       </div>
       <div className="scene-grid" aria-hidden="true" />
       <div className="speech-bubble">
-        <span>MAYA · OPERATIONS COORDINATOR</span>
+        <span>MAYA · AOG SOURCING COORDINATOR</span>
         <strong>“{bubble}”</strong>
       </div>
       <div className="ops-board" aria-hidden="true">
-        <b>OPS STATUS</b>
-        <span>CA 184 · BOS <em>ON TIME</em></span>
-        <span>CA 219 · DCA <em className="delay">DELAY</em></span>
-        <span>CA 440 · MIA <em>ON TIME</em></span>
+        <b>AOG BOARD</b>
+        <span>RFQ 827 · ACTUATOR <em>SOURCING</em></span>
+        <span>RFQ 844 · FCU <em className="delay">URGENT</em></span>
+        <span>RFQ 851 · SENSOR <em>QUOTED</em></span>
       </div>
       <div className="cast" aria-hidden="true">
         <div className="person person-one"><i /><b /><span>MAYA</span></div>
@@ -216,7 +232,7 @@ function OfficeScene({ stage, cleared = false }: { stage: number; cleared?: bool
         <div className="monitor"><i /><i /><i /></div>
         <div className="mug" />
       </div>
-      <div className="scene-caption">Your move: protect the data without grounding the work.</div>
+      <div className="scene-caption">Your move: protect the relationship without slowing the sourcing work.</div>
       {cleared && <div className="scene-stamp" aria-hidden="true">SMART CALL! ✓</div>}
     </div>
   );
@@ -278,6 +294,7 @@ export default function Home() {
   const [profile, setProfile] = useState<LearnerProfile | null>(null);
   const [view, setView] = useState<View>("dashboard");
   const [storyBeat, setStoryBeat] = useState(0);
+  const [academyStep, setAcademyStep] = useState(0);
   const [stage, setStage] = useState(0);
   const [mistakes, setMistakes] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
@@ -368,8 +385,8 @@ export default function Home() {
     setFeedback({
       correct,
       text: correct
-        ? "Clean handoff. You removed direct identifiers while keeping the operational facts needed for the task."
-        : "Not quite. Remove direct personal details and unique booking identifiers, but keep the operational facts needed for the summary.",
+        ? "Clean handoff. You removed customer and direct identifiers while keeping the sourcing and logistics facts needed for the task."
+        : "Not quite. Remove the customer, buyer contact, and unique RFQ reference, but keep the part need and logistics facts required for the update.",
     });
     if (!correct) setMistakes((count) => count + 1);
   }
@@ -382,6 +399,7 @@ export default function Home() {
     setFeedback(null);
     setRedactions([]);
     setStoryBeat(0);
+    setAcademyStep(0);
   }
 
   function completeOnboarding(nextProfile: LearnerProfile) {
@@ -411,28 +429,28 @@ export default function Home() {
       <MissionRail />
       <section className="workspace">
         <header className="topbar">
-          <div><span className="edition-chip">AVIATION OPERATIONS EDITION</span><span className="status-chip"><i /> Progress connected</span></div>
+          <div><span className="edition-chip">DASI · AVIATION PARTS & LOGISTICS</span><span className="status-chip"><i /> Progress connected</span></div>
           <div className="learner-controls"><button className="topbar-admin" type="button" onClick={() => setMode("admin")}>Admin</button><button className="topbar-switch" type="button" onClick={() => { window.localStorage.removeItem("cal-learner-profile-v1"); setProfile(null); setMode("onboarding"); }}>Switch learner</button><div className="profile"><span>{initials}</span><p><strong>{profile?.name}</strong><small>{profile?.role || "Learner"} · {profile?.skillLevel}</small></p></div></div>
         </header>
 
         {view === "dashboard" && (
           <div className="dashboard page-enter">
-            <div className="episode-kicker"><span>EPISODE 01</span><i /> DATA SAFETY PILOT</div>
+            <div className="episode-kicker"><span>EPISODE 01</span><i /> DASI AI SAFETY PILOT</div>
             <div className="dashboard-heading">
-              <div><h1>The Data Safety<br />Checkpoint</h1><p>Help the crew use AI without sending sensitive information somewhere it does not belong.</p></div>
-              <div className="time-card"><small>ESTIMATED TIME</small><strong>6 min</strong><span>Interactive scenario</span></div>
+              <div><h1>The AOG Data<br />Checkpoint</h1><p>Help the DASI team use AI without exposing customer, supplier, pricing, or sourcing information.</p></div>
+              <div className="time-card"><small>ESTIMATED TIME</small><strong>10 min</strong><span>Briefing + scenario</span></div>
             </div>
             <div className="dashboard-grid">
               <div>
                 <OfficeScene stage={0} />
                 <div className="mission-brief comic-box">
-                  <div><span className="caption-label">TODAY’S CALL</span><h2>Can a chatbot see this incident report?</h2><p>Choose a safe tool, remove unnecessary data, build a useful prompt, and verify the result.</p></div>
-                  <button className="primary-button" type="button" onClick={() => { setStoryBeat(0); setView("story"); }}>Start episode <span>▶</span></button>
+                  <div><span className="caption-label">TODAY’S CALL</span><h2>Can a chatbot see this urgent sourcing request?</h2><p>Take a fast AI preflight, watch the AOG desk scene, then choose a safe tool, minimize data, build a useful prompt, and verify the result.</p></div>
+                  <button className="primary-button" type="button" onClick={() => { setAcademyStep(0); setView("academy"); }}>Begin training <span>▶</span></button>
                 </div>
                 <div className="mission-objectives" aria-label="Mission objectives">
-                  <article><span>01</span><p><strong>Protect the passenger</strong><small>Spot details that do not belong in a prompt.</small></p></article>
+                  <article><span>01</span><p><strong>Protect the relationship</strong><small>Spot customer and supplier details that do not belong in a prompt.</small></p></article>
                   <article><span>02</span><p><strong>Coach the chatbot</strong><small>Turn a vague request into a useful instruction.</small></p></article>
-                  <article><span>03</span><p><strong>Keep a human flying</strong><small>Verify before a polished answer leaves the desk.</small></p></article>
+                  <article><span>03</span><p><strong>Keep a human accountable</strong><small>Verify before a polished sourcing update leaves the desk.</small></p></article>
                 </div>
               </div>
               <aside className="mastery-panel comic-box">
@@ -450,9 +468,18 @@ export default function Home() {
           </div>
         )}
 
+        {view === "academy" && (
+          <div className="academy-player page-enter">
+            <header className="academy-header"><div><span className="episode-kicker"><span>AI PREFLIGHT</span><i /> 5 QUICK CARDS</span><h1>First, meet your new tool.</h1><p>What AI is good at, where it gets risky, and the DASI habits that keep people in control.</p></div><div className="academy-count"><strong>{String(academyStep + 1).padStart(2, "0")}</strong><span>/ 05</span></div></header>
+            <div className="academy-progress" aria-label={`AI preflight card ${academyStep + 1} of ${academySlides.length}`}>{academySlides.map((slide, index) => <i className={index <= academyStep ? "active" : ""} key={slide.label} />)}</div>
+            <AcademyBriefing step={academyStep} />
+            <div className="academy-controls"><button className="back-button" disabled={academyStep === 0} type="button" onClick={() => setAcademyStep((value) => Math.max(0, value - 1))}>← Back</button><span>About {academySlides.length - academyStep} minute{academySlides.length - academyStep === 1 ? "" : "s"} to the scenario</span>{academyStep < academySlides.length - 1 ? <button className="primary-button compact" type="button" onClick={() => setAcademyStep((value) => value + 1)}>Got it — next <span>→</span></button> : <button className="primary-button compact" type="button" onClick={() => { setStoryBeat(0); setView("story"); }}>Watch the scenario <span>▶</span></button>}</div>
+          </div>
+        )}
+
         {view === "story" && (
           <div className="story-player page-enter">
-            <header className="story-player-header"><div><span className="episode-kicker"><span>COLD OPEN</span><i /> WATCH THE SCENE</span><h1>Before you make the call…</h1><p>Meet the crew, see the pressure they are under, and notice where the AI risk begins.</p></div><button className="text-button" type="button" onClick={() => setView("mission")}>Skip to decision</button></header>
+            <header className="story-player-header"><div><span className="episode-kicker"><span>DASI AOG DESK</span><i /> WATCH THE SCENE</span><h1>Now see it at work.</h1><p>Meet the sourcing crew, see the pressure they are under, and notice where the AI risk begins.</p></div><button className="text-button" type="button" onClick={() => setView("mission")}>Skip to decision</button></header>
             <div className="story-timeline" aria-label={`Scene ${storyBeat + 1} of ${storyBeats.length}`}>{storyBeats.map((_, index) => <i className={index <= storyBeat ? "active" : ""} key={index}><span /></i>)}</div>
             <StoryScene beat={storyBeat} />
             <div className="story-controls">
@@ -484,8 +511,8 @@ export default function Home() {
                   "What happens before this draft is shared?",
                 ][stage]}</h1>
                 <p>{[
-                  "The report is internal and the public chatbot has not been approved for company data.",
-                  "The task needs operational context—not a customer’s identity.",
+                  "The RFQ and supplier responses are internal, and the public chatbot is not approved for DASI data.",
+                  "The task needs sourcing and logistics context—not the customer’s identity.",
                   "A strong prompt defines the task, audience, format, and limits.",
                   "The chatbot produced a clean three-bullet summary with a confident tone.",
                 ][stage]}</p>
@@ -494,7 +521,7 @@ export default function Home() {
               {stage === 0 && <ChoiceCards choices={firstChoices} selected={selected} onChoose={answer} />}
               {stage === 1 && (
                 <div className="redaction-board">
-                  <div className="report-header"><span>INCIDENT NOTE · INTERNAL</span><b>Select details to redact</b></div>
+                  <div className="report-header"><span>AOG SOURCING BRIEF · INTERNAL</span><b>Select details to redact</b></div>
                   <div className="data-chips">
                     {dataItems.map((item) => {
                       const checked = redactions.includes(item.id);
@@ -578,7 +605,7 @@ export default function Home() {
           <h1>{learnerName || "Learner Name"}</h1>
           <p>successfully completed</p>
           <h2>AI Chatbots: Intro 101 — Pilot Mission</h2>
-          <h3>Data Safety Checkpoint · Aviation Operations Edition</h3>
+          <h3>AOG Data Checkpoint · DASI Aviation Parts & Logistics</h3>
           <div className="certificate-meta"><span><small>COMPLETED</small>{new Intl.DateTimeFormat("en-US", { dateStyle: "long" }).format(new Date())}</span><span><small>MASTERY</small>{score}%</span><span><small>CERTIFICATE ID</small>{certificateId}</span></div>
           <div className="certificate-rule">Pause · Classify · Minimize · Verify</div>
         </div>

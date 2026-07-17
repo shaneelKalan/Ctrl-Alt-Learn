@@ -5,7 +5,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const defaultSettings = {
-  organizationName: "Ctrl+Alt+Learn Pilot Team", industry: "Aviation", passingScore: "80",
+  organizationName: "DASI", industry: "Aviation Parts & Logistics", passingScore: "80",
   certificatesEnabled: "true", coursePublished: "true", reminderDays: "7",
   policyNote: "Use only company-approved AI tools. Do not enter confidential, personal, regulated, or safety-sensitive information unless the workflow is explicitly approved.",
 };
