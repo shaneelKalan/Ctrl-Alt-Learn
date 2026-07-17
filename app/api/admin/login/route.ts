@@ -1,5 +1,7 @@
 import { clearAdminCookie, createAdminCookie, isAdminRequest, validAdminPassword } from "../_auth";
 
+export const runtime = "nodejs";
+
 export async function GET(request: Request) {
   return Response.json({ authenticated: await isAdminRequest(request) });
 }

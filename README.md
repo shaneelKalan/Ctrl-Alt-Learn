@@ -1,98 +1,70 @@
-# vinext-starter
+# Ctrl+Alt+Learn
 
-A clean full-stack starter running on
-[vinext](https://github.com/cloudflare/vinext), with optional Cloudflare D1 and
-Drizzle support.
+Interactive, scenario-based AI literacy training for modern teams. A comic-styled
+Next.js app that teaches everyday employees how to use AI chatbots safely and
+effectively — through playable missions, not slideware.
 
-## Prerequisites
+## The course
 
-- Node.js `>=22.13.0`
+**AI Chatbots: Intro 101** — eight missions, ~29 minutes:
 
-## Quick Start
+1. **Meet Your AI Teammate** — what AI/LLMs/chatbots actually are
+2. **Superpowers & Limits** — strengths, hallucinations, spotting red flags
+3. **The Data Safety Checkpoint** — classify, minimize, and protect data
+4. **Work Mode** — green/yellow/red-light uses and accountability
+5. **Life Mode** — everyday wins, caution zones, AI-powered scams
+6. **Prompt Repair Shop** — prompt anatomy and iteration
+7. **Verify Before You Fly** — verification proportional to impact
+8. **The Final Shift Challenge** — capstone combining every skill
+
+Five activity types (teaching briefings, scenario choices, redaction boards,
+classification lanes, and a guided prompt builder), sequential unlocks, a
+mastery radar across four scoring dimensions, per-mission debriefs, and a
+printable completion certificate.
+
+## Quick start
 
 ```bash
 npm install
+cp .env.example .env.local   # set ADMIN_PASSWORD
 npm run dev
-npm run build
 ```
 
-This starter does not use `wrangler.jsonc`.
+- Learner experience: `http://localhost:3000`
+- Admin control room: click **Admin** (password = `ADMIN_PASSWORD`)
 
-## Included Shape
+## Configuration
 
-- edit site code under `app/`
-- `.openai/hosting.json` declares optional Sites D1 and R2 bindings
-- `vite.config.ts` simulates declared bindings for local development
-- `db/schema.ts` starts intentionally empty
-- `examples/d1/` contains an optional D1 example surface
-- `drizzle.config.ts` supports local migration generation when needed
+| Variable | Purpose |
+| --- | --- |
+| `ADMIN_PASSWORD` | Prototype admin login for the control room |
+| `KV_REST_API_URL` / `KV_REST_API_TOKEN` | Optional Vercel KV / Upstash Redis REST store for durable learner, assignment, and completion records |
+| `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | Upstash-native equivalents of the above |
 
-## Workspace Auth Headers
+Without a KV store configured, server records fall back to per-instance memory —
+fine for local development and demos, not for a real pilot.
 
-OpenAI workspace sites can read the current user's email from
-`oai-authenticated-user-email`.
+## Project layout
 
-SIWC-authenticated workspace sites may also receive
-`oai-authenticated-user-full-name` when the user's SIWC profile has a non-empty
-`name` claim. The full-name value is percent-encoded UTF-8 and is accompanied by
-`oai-authenticated-user-full-name-encoding: percent-encoded-utf-8`.
+- `app/course.ts` — the full course content model (missions, steps, coaching copy)
+- `app/MissionPlayer.tsx` — generic player for all activity types
+- `app/page.tsx` — learner dashboard, course map, debriefs, results, certificate
+- `app/AdminPortal.tsx` — admin control room (people, assignments, courses, reports, settings)
+- `app/api/` — admin auth/session, admin data actions, completion recording
+- `db/index.ts` — JSON pilot store (KV-backed when configured, in-memory otherwise)
+- `docs/PRODUCT_BRIEF.md` — product vision, curriculum outline, and roadmap
 
-Treat the full name as optional and fall back to email when it is absent:
+## Useful commands
 
-```tsx
-import { headers } from "next/headers";
+- `npm run dev` — start local development
+- `npm run build` — production build
+- `npm test` — build plus source-contract tests
+- `npm run lint` — ESLint
 
-export default async function Home() {
-  const requestHeaders = await headers();
-  const email = requestHeaders.get("oai-authenticated-user-email");
-  const encodedFullName = requestHeaders.get("oai-authenticated-user-full-name");
-  const fullName =
-    encodedFullName &&
-    requestHeaders.get("oai-authenticated-user-full-name-encoding") ===
-      "percent-encoded-utf-8"
-      ? decodeURIComponent(encodedFullName)
-      : null;
+## Deployment
 
-  const displayName = fullName ?? email;
-  // ...
-}
-```
+Deploys as a standard Next.js app (Vercel-ready). Set `ADMIN_PASSWORD` and,
+for durable records, the KV variables in your project environment.
 
-## Optional Dispatch-Owned ChatGPT Sign-In
-
-Import the ready-to-use helpers from `app/chatgpt-auth.ts` when the site needs
-optional or required ChatGPT sign-in:
-
-- Use `getChatGPTUser()` for optional signed-in UI.
-- Use `requireChatGPTUser(returnTo)` for server-rendered pages that should send
-  anonymous visitors through Sign in with ChatGPT.
-- Use `chatGPTSignInPath(returnTo)` and `chatGPTSignOutPath(returnTo)` for
-  browser links or actions.
-- Pass a same-origin relative `returnTo` path for the destination after sign-in
-  or sign-out. The helper validates and safely encodes it.
-- Mark protected pages with `export const dynamic = "force-dynamic"` because
-  they depend on per-request identity headers.
-
-Dispatch owns `/signin-with-chatgpt`, `/signout-with-chatgpt`, `/callback`, the
-OAuth cookies, and identity header injection. Do not implement app routes for
-those reserved paths. Routes that do not import and call the helper remain
-anonymous-compatible.
-
-SIWC establishes identity only; it does not prove workspace membership. Use the
-Sites hosting platform's access policy controls for workspace-wide restrictions,
-or enforce explicit server-side membership or allowlist checks.
-
-Use SIWC for account pages, user-specific dashboards, saved records, and write
-actions tied to the current ChatGPT user. Leave public content anonymous.
-
-## Useful Commands
-
-- `npm run dev`: start local development
-- `npm run build`: verify the vinext build output
-- `npm test`: build the starter and verify its rendered loading skeleton
-- `npm run db:generate`: generate Drizzle migrations after schema changes
-
-## Learn More
-
-- [vinext Documentation](https://github.com/cloudflare/vinext)
-- [Drizzle D1 Guide](https://orm.drizzle.team/docs/get-started/d1-new)
+Production hardening still required before organizational rollout: real
+identity/SSO, roles, rate limiting, and audit logging (see the product brief).

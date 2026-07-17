@@ -38,16 +38,31 @@ test("protects admin routes with an HTTP-only session cookie", async () => {
   assert.match(admin, /saveSettings/);
 });
 
-test("includes durable training records and a generated migration", async () => {
-  const [schema, migration, hosting] = await Promise.all([
-    source("db/schema.ts"),
-    source("drizzle/0000_plain_war_machine.sql"),
-    source(".openai/hosting.json"),
+test("includes a durable-capable training record store", async () => {
+  const [store, completions] = await Promise.all([
+    source("db/index.ts"),
+    source("app/api/completions/route.ts"),
   ]);
 
-  assert.match(schema, /learners/);
-  assert.match(schema, /assignments/);
-  assert.match(schema, /completions/);
-  assert.match(migration, /CREATE TABLE `organization_settings`/);
-  assert.match(hosting, /"d1": "DB"/);
+  assert.match(store, /learners/);
+  assert.match(store, /assignments/);
+  assert.match(store, /completions/);
+  assert.match(store, /KV_REST_API_URL/);
+  assert.match(store, /UPSTASH_REDIS_REST_URL/);
+  assert.match(completions, /readStore/);
+  assert.match(completions, /writeStore/);
+});
+
+test("ships the full eight-mission course", async () => {
+  const [course, player, page] = await Promise.all([
+    source("app/course.ts"),
+    source("app/MissionPlayer.tsx"),
+    source("app/page.tsx"),
+  ]);
+
+  const missionIds = ["meet-ai", "superpowers-limits", "data-safety", "work-mode", "life-mode", "prompt-repair", "trust-verify", "final-shift"];
+  for (const id of missionIds) assert.match(course, new RegExp(`id: "${id}"`));
+  for (const kind of ["info", "choice", "multi", "sort", "builder"]) assert.match(player, new RegExp(`kind === "${kind}"`));
+  assert.match(page, /cal-course-progress-v2/);
+  assert.match(page, /MissionPlayer/);
 });

@@ -1,9 +1,7 @@
-import { env } from "cloudflare:workers";
-
 const COOKIE_NAME = "cal_admin";
 
 function adminPassword() {
-  return (env as unknown as { ADMIN_PASSWORD?: string }).ADMIN_PASSWORD ?? "";
+  return process.env.ADMIN_PASSWORD ?? "";
 }
 
 async function sessionToken(password: string) {
