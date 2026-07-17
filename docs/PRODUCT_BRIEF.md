@@ -189,10 +189,13 @@ Initial aviation scenario themes:
 
 - Four-step onboarding: welcome, learner profile, AI skill/goals, and a trust diagnostic.
 - Personalized learner identity and certificate name.
-- One six-minute playable data-safety mission; seven additional Intro 101 missions remain planned for the complete 29-minute course.
+- The complete 29-minute Intro 101 course: eight playable missions covering foundations, strengths and limits, data safety, work mode, life mode, prompting, verification, and a capstone shift challenge.
+- Five interactive activity types: teaching briefings, scenario choices, redaction/flagging boards, classification lanes, and a guided prompt builder.
+- Sequential mission unlocks, per-mission debriefs with a reusable rule, and a live mastery radar across the four scoring dimensions (Safety, Judgment, Verification, Prompt craft).
+- Device-local course progress plus a server-backed completion record posted when the final mission is cleared.
 - Server-backed learners, course assignments, organization settings, and completion records.
-- Admin control room with Overview, People, Assignments, Courses, Reports, and Settings.
-- CSV completion export and print-to-PDF learner certificate.
+- Admin control room with Overview, People, Assignments, Courses, Reports, and Settings; the Courses tab reflects the live eight-mission curriculum.
+- CSV completion export and print-to-PDF learner certificate for the full course.
 - Temporary prototype admin password only; production identity, roles, rate limiting, password rotation, and audit logging remain required before organizational rollout.
 
 ## Certificate and completion record

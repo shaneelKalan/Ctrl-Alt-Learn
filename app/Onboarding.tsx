@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { course, courseMinutes } from "./course";
 
 export type LearnerProfile = {
   name: string;
@@ -36,7 +37,7 @@ export function Onboarding({ onComplete, onAdmin }: { onComplete: (profile: Lear
       <div className="onboarding-progress" aria-label={`Onboarding step ${step + 1} of 4`}><span style={{ width: `${(step + 1) * 25}%` }} /></div>
 
       {step === 0 && <section className="onboarding-hero page-enter">
-        <div className="onboarding-copy"><span className="episode-kicker"><span>WELCOME ABOARD</span><i /> INTRO 101 PILOT</span><h1>AI training you<br /><em>actually get to play.</em></h1><p>Join Maya and Jordan for a fast, practical pilot mission about using chatbots safely, effectively, and responsibly at work.</p><div className="onboarding-facts"><span><b>6 min</b><small>pilot time</small></span><span><b>1 live</b><small>7 more planned</small></span><span><b>1</b><small>pilot certificate</small></span></div><button className="primary-button onboarding-start" type="button" onClick={() => next()}>Set up my training <span>→</span></button><small className="onboarding-note">No AI expertise required. Coaching is built into every choice.</small></div>
+        <div className="onboarding-copy"><span className="episode-kicker"><span>WELCOME ABOARD</span><i /> INTRO 101</span><h1>AI training you<br /><em>actually get to play.</em></h1><p>Join Maya and Jordan for {course.length} fast, practical missions about using AI chatbots safely, effectively, and responsibly — at work and beyond.</p><div className="onboarding-facts"><span><b>{courseMinutes} min</b><small>full course</small></span><span><b>{course.length}</b><small>playable missions</small></span><span><b>1</b><small>certificate</small></span></div><button className="primary-button onboarding-start" type="button" onClick={() => next()}>Set up my training <span>→</span></button><small className="onboarding-note">No AI expertise required. Coaching is built into every choice.</small></div>
         <div className="onboarding-stage" role="img" aria-label="Two coworkers in an aviation operations training studio"><div className="welcome-caption">NEW EPISODE: MEET YOUR AI TEAMMATE</div><div className="welcome-bubble">“Ready to learn what AI can—and cannot—do?”</div><div className="welcome-board"><span>SAFETY</span><span>JUDGMENT</span><span>VERIFY</span><span>PROMPT</span></div><div className="welcome-cast"><i /><i /></div><div className="welcome-desk" /></div>
       </section>}
 
@@ -50,7 +51,7 @@ export function Onboarding({ onComplete, onAdmin }: { onComplete: (profile: Lear
         ["avoid", "Never use AI", "Chatbots are too risky for any workplace task."],
       ].map(([id, title, copy], index) => <button aria-pressed={profile.trustAnswer === id} key={id} type="button" onClick={() => setProfile({ ...profile, trustAnswer: id })}><span>{String.fromCharCode(65 + index)}</span><b>{title}</b><small>{copy}</small></button>)}</div>{profile.trustAnswer && <div className={`diagnostic-feedback ${profile.trustAnswer === "verify" ? "correct" : ""}`}><span>{profile.trustAnswer === "verify" ? "✓" : "✦"}</span><p><strong>{profile.trustAnswer === "verify" ? "Good instinct." : "That’s exactly why we practice."}</strong>{profile.trustAnswer === "verify" ? " Verification should match the impact of the answer." : " AI can be useful, but confidence is not proof. The course will show you when and how to verify."}</p></div>}<div className="onboarding-actions"><button className="back-button" type="button" onClick={() => setStep(2)}>← Back</button><button className="primary-button" disabled={!profile.trustAnswer} type="button" onClick={() => onComplete(profile)}>Enter the course <span>→</span></button></div></section>}
 
-      <footer className="onboarding-footer"><span>Prototype · Aviation Operations Edition</span><span>Progress is saved after onboarding.</span></footer>
+      <footer className="onboarding-footer"><span>Aviation Operations Edition · {course.length} missions · {courseMinutes} minutes</span><span>Progress is saved after onboarding.</span></footer>
     </main>
   );
 }
