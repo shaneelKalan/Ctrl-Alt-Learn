@@ -31,6 +31,19 @@ test("ships guided learner onboarding", async () => {
   assert.match(page, /Fluent is not the same as factual/);
   assert.match(page, /DASI · AVIATION PARTS & LOGISTICS/);
   assert.match(page, /AOG SOURCING COORDINATOR/);
+  assert.match(page, /CONFABULATION/);
+  assert.match(page, /PROMPT BLUEPRINT/);
+  assert.match(page, /FINAL PREFLIGHT/);
+  assert.match(page, /academy-choices/);
+});
+
+test("documents authoritative curriculum sources and DASI review boundaries", async () => {
+  const sources = await source("docs/CONTENT_SOURCES.md");
+  assert.match(sources, /NIST AI Risk Management Framework/);
+  assert.match(sources, /CISA Artificial Intelligence/);
+  assert.match(sources, /OECD AI Principles/);
+  assert.match(sources, /FAA Roadmap/);
+  assert.match(sources, /must be reviewed against actual DASI policies/);
 });
 
 test("protects admin routes with an HTTP-only session cookie", async () => {

@@ -131,19 +131,35 @@ const stageDetails = [
   { eyebrow: "HUMAN CONTROL", reward: "+25 XP", consequence: "A qualified reviewer stays accountable for what leaves the desk." },
 ];
 
-const academySlides = [
-  { icon: "✦", label: "AI IN 20 SECONDS", title: "A very fast pattern machine.", copy: "Generative AI predicts useful words, images, and code from patterns it learned. It can sound human, but it does not understand a customer, a part, or an airworthiness requirement the way you do.", callout: "Fluent is not the same as factual.", tone: "blue" },
-  { icon: "⚡", label: "GREEN-LIGHT WORK", title: "Give it the blank-page jobs.", copy: "AI can help brainstorm, rewrite, summarize approved text, create a first draft, explain a concept, or format information. Use it to accelerate work—not to replace qualified judgment.", callout: "Draft faster. Decide like a human.", tone: "teal" },
-  { icon: "?", label: "TURBULENCE AHEAD", title: "Confidence can be counterfeit.", copy: "AI can invent facts, miss context, repeat bias, use stale information, or produce a believable wrong answer. Asking the same chatbot whether it is correct is not independent verification.", callout: "Check the source, not the tone.", tone: "coral" },
-  { icon: "⌁", label: "THE DATA GATE", title: "Pause before you paste.", copy: "Customer details, supplier pricing, RFQs, trace documents, contracts, export-controlled information, personal data, and internal records belong only in specifically approved tools and workflows.", callout: "Approved tool. Minimum data. Clear purpose.", tone: "yellow" },
-  { icon: "✓", label: "YOUR HUMAN CHECKLIST", title: "You remain accountable.", copy: "Before using AI output, verify important claims against the source, follow DASI procedures, involve the qualified owner, and stop when the task is safety-critical, regulated, or outside your authority.", callout: "Pause → classify → minimize → verify.", tone: "purple" },
+type AcademySlide = {
+  icon: string; chapter: string; label: string; title: string; copy: string; callout: string; tone: string;
+  choices?: { id: string; label: string; correct: boolean; coach: string }[];
+};
+
+const academySlides: AcademySlide[] = [
+  { icon: "✦", chapter: "FOUNDATIONS", label: "AI IN PLAIN ENGLISH", title: "A prediction engine, not a teammate with judgment.", copy: "Generative AI produces new text, images, or code by predicting patterns from its training and the context you provide. It can imitate expertise without possessing experience, intent, or accountability.", callout: "Fluent is not the same as factual.", tone: "blue" },
+  { icon: "▤", chapter: "FOUNDATIONS", label: "CONTEXT WINDOW", title: "It only sees the world you give it.", copy: "A chatbot uses your prompt, the conversation, and any connected material as context. Missing context produces guesses; excessive context can expose data or bury the important instruction.", callout: "Relevant context beats maximum context.", tone: "purple" },
+  { icon: "⚡", chapter: "USE", label: "GREEN-LIGHT WORK", title: "Give it reversible, reviewable work.", copy: "Good starting uses include brainstorming, restructuring approved text, drafting low-risk messages, explaining concepts, and formatting information. The safer pattern is easy to review and easy to undo.", callout: "Draft faster. Decide like a human.", tone: "teal" },
+  { icon: "?", chapter: "CHECKPOINT", label: "YOU MAKE THE CALL", title: "Which task is the best AI starting point?", copy: "Choose the task with low impact, approved information, and a result a person can quickly review.", callout: "Risk rises with impact, sensitive data, and difficult verification.", tone: "yellow", choices: [
+    { id: "draft", label: "Draft a meeting agenda from approved bullet points", correct: true, coach: "Exactly. It is low impact, uses approved inputs, and is easy to review." },
+    { id: "approve", label: "Approve an airworthiness document without technical review", correct: false, coach: "That requires qualified human review and cannot be delegated to a chatbot." },
+    { id: "rank", label: "Rank suppliers using confidential pricing in a public tool", correct: false, coach: "The data, decision impact, and unapproved tool make this unsafe." },
+  ] },
+  { icon: "!", chapter: "RISK", label: "CONFABULATION", title: "A polished answer can be invented.", copy: "Generative AI can fabricate citations, part details, calculations, or explanations. It may also omit a condition that changes the answer. NIST calls this risk confabulation; many people call it hallucination.", callout: "Treat output as a draft until evidence earns trust.", tone: "coral" },
+  { icon: "⌁", chapter: "RISK", label: "THE DATA GATE", title: "Pause before you paste.", copy: "Customer details, supplier pricing, RFQs, trace documents, contracts, export-controlled information, personal data, and internal records belong only in specifically approved tools and workflows.", callout: "Approved tool. Minimum data. Clear purpose.", tone: "yellow" },
+  { icon: "✎", chapter: "PRACTICE", label: "PROMPT BLUEPRINT", title: "Brief the tool like a new contractor.", copy: "State the goal, audience, relevant context, constraints, output format, and what to do when information is missing. Never ask it to hide uncertainty or manufacture completeness.", callout: "Goal + context + limits + format + checks.", tone: "blue" },
+  { icon: "✓", chapter: "CHECKPOINT", label: "FINAL PREFLIGHT", title: "A chatbot returns a confident lead time. What now?", copy: "Choose the action that makes trust proportional to the business and safety impact.", callout: "Pause → classify → minimize → verify.", tone: "purple", choices: [
+    { id: "source", label: "Verify it against the supplier response and DASI workflow", correct: true, coach: "Cleared. Independent evidence and the responsible workflow come before use." },
+    { id: "ask", label: "Ask the same chatbot if it is sure", correct: false, coach: "A self-check may help revise a draft, but it is not independent evidence." },
+    { id: "send", label: "Send it because the wording sounds precise", correct: false, coach: "Precision of tone does not prove accuracy." },
+  ] },
 ];
 
-function AcademyBriefing({ step }: { step: number }) {
+function AcademyBriefing({ step, answer, onAnswer }: { step: number; answer: string | null; onAnswer: (id: string) => void }) {
   const slide = academySlides[step];
   return <section className={`academy-card academy-${slide.tone}`}>
     <div className="academy-visual" aria-hidden="true"><span>{slide.icon}</span><div className="ai-terminal"><b>AI COPILOT</b><i /><i /><i /><em>{step === 0 ? "predicts patterns" : step === 1 ? "creates a draft" : step === 2 ? "may sound certain" : step === 3 ? "waits at the gate" : "needs your review"}</em></div><div className="human-badge">HUMAN<br />IN CONTROL</div></div>
-    <div className="academy-copy"><span>{slide.label}</span><h2>{slide.title}</h2><p>{slide.copy}</p><blockquote>{slide.callout}</blockquote></div>
+    <div className="academy-copy"><span>{slide.chapter} · {slide.label}</span><h2>{slide.title}</h2><p>{slide.copy}</p>{slide.choices ? <div className="academy-choices">{slide.choices.map((choice) => <button aria-pressed={answer === choice.id} className={answer === choice.id ? (choice.correct ? "correct" : "incorrect") : ""} key={choice.id} onClick={() => onAnswer(choice.id)} type="button"><b>{choice.label}</b>{answer === choice.id && <small>{choice.coach}</small>}</button>)}</div> : <blockquote>{slide.callout}</blockquote>}</div>
   </section>;
 }
 
@@ -295,6 +311,7 @@ export default function Home() {
   const [view, setView] = useState<View>("dashboard");
   const [storyBeat, setStoryBeat] = useState(0);
   const [academyStep, setAcademyStep] = useState(0);
+  const [academyAnswer, setAcademyAnswer] = useState<string | null>(null);
   const [stage, setStage] = useState(0);
   const [mistakes, setMistakes] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
@@ -400,6 +417,7 @@ export default function Home() {
     setRedactions([]);
     setStoryBeat(0);
     setAcademyStep(0);
+    setAcademyAnswer(null);
   }
 
   function completeOnboarding(nextProfile: LearnerProfile) {
@@ -438,14 +456,14 @@ export default function Home() {
             <div className="episode-kicker"><span>EPISODE 01</span><i /> DASI AI SAFETY PILOT</div>
             <div className="dashboard-heading">
               <div><h1>The AOG Data<br />Checkpoint</h1><p>Help the DASI team use AI without exposing customer, supplier, pricing, or sourcing information.</p></div>
-              <div className="time-card"><small>ESTIMATED TIME</small><strong>10 min</strong><span>Briefing + scenario</span></div>
+              <div className="time-card"><small>ESTIMATED TIME</small><strong>15 min</strong><span>Briefing + scenario</span></div>
             </div>
             <div className="dashboard-grid">
               <div>
                 <OfficeScene stage={0} />
                 <div className="mission-brief comic-box">
                   <div><span className="caption-label">TODAY’S CALL</span><h2>Can a chatbot see this urgent sourcing request?</h2><p>Take a fast AI preflight, watch the AOG desk scene, then choose a safe tool, minimize data, build a useful prompt, and verify the result.</p></div>
-                  <button className="primary-button" type="button" onClick={() => { setAcademyStep(0); setView("academy"); }}>Begin training <span>▶</span></button>
+                  <button className="primary-button" type="button" onClick={() => { setAcademyStep(0); setAcademyAnswer(null); setView("academy"); }}>Begin training <span>▶</span></button>
                 </div>
                 <div className="mission-objectives" aria-label="Mission objectives">
                   <article><span>01</span><p><strong>Protect the relationship</strong><small>Spot customer and supplier details that do not belong in a prompt.</small></p></article>
@@ -470,10 +488,10 @@ export default function Home() {
 
         {view === "academy" && (
           <div className="academy-player page-enter">
-            <header className="academy-header"><div><span className="episode-kicker"><span>AI PREFLIGHT</span><i /> 5 QUICK CARDS</span><h1>First, meet your new tool.</h1><p>What AI is good at, where it gets risky, and the DASI habits that keep people in control.</p></div><div className="academy-count"><strong>{String(academyStep + 1).padStart(2, "0")}</strong><span>/ 05</span></div></header>
-            <div className="academy-progress" aria-label={`AI preflight card ${academyStep + 1} of ${academySlides.length}`}>{academySlides.map((slide, index) => <i className={index <= academyStep ? "active" : ""} key={slide.label} />)}</div>
-            <AcademyBriefing step={academyStep} />
-            <div className="academy-controls"><button className="back-button" disabled={academyStep === 0} type="button" onClick={() => setAcademyStep((value) => Math.max(0, value - 1))}>← Back</button><span>About {academySlides.length - academyStep} minute{academySlides.length - academyStep === 1 ? "" : "s"} to the scenario</span>{academyStep < academySlides.length - 1 ? <button className="primary-button compact" type="button" onClick={() => setAcademyStep((value) => value + 1)}>Got it — next <span>→</span></button> : <button className="primary-button compact" type="button" onClick={() => { setStoryBeat(0); setView("story"); }}>Watch the scenario <span>▶</span></button>}</div>
+            <header className="academy-header"><div><span className="episode-kicker"><span>AI PREFLIGHT</span><i /> LEARN + PRACTICE</span><h1>First, build your AI instincts.</h1><p>Eight short cards based on recognized AI risk-management and literacy guidance—translated into DASI work.</p></div><div className="academy-count"><strong>{String(academyStep + 1).padStart(2, "0")}</strong><span>/ {String(academySlides.length).padStart(2, "0")}</span></div></header>
+            <div className="academy-progress" style={{ gridTemplateColumns: `repeat(${academySlides.length}, 1fr)` }} aria-label={`AI preflight card ${academyStep + 1} of ${academySlides.length}`}>{academySlides.map((slide, index) => <i className={index <= academyStep ? "active" : ""} key={slide.label} />)}</div>
+            <AcademyBriefing step={academyStep} answer={academyAnswer} onAnswer={setAcademyAnswer} />
+            <div className="academy-controls"><button className="back-button" disabled={academyStep === 0} type="button" onClick={() => { setAcademyAnswer(null); setAcademyStep((value) => Math.max(0, value - 1)); }}>← Back</button><span>{academySlides[academyStep].chapter} · Card {academyStep + 1} of {academySlides.length}</span>{academyStep < academySlides.length - 1 ? <button className="primary-button compact" disabled={Boolean(academySlides[academyStep].choices) && !academySlides[academyStep].choices?.find((choice) => choice.id === academyAnswer)?.correct} type="button" onClick={() => { setAcademyAnswer(null); setAcademyStep((value) => value + 1); }}>{academySlides[academyStep].choices ? "Check cleared" : "Got it — next"} <span>→</span></button> : <button className="primary-button compact" disabled={!academySlides[academyStep].choices?.find((choice) => choice.id === academyAnswer)?.correct} type="button" onClick={() => { setStoryBeat(0); setView("story"); }}>Watch the scenario <span>▶</span></button>}</div>
           </div>
         )}
 
