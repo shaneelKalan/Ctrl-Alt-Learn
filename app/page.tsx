@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AdminPortal } from "./AdminPortal";
 import { LearnerProfile, Onboarding } from "./Onboarding";
 
-type View = "dashboard" | "academy" | "story" | "mission" | "results";
+type View = "dashboard" | "academy" | "lab" | "story" | "mission" | "results";
 type AppMode = "loading" | "onboarding" | "learner" | "admin";
 
 type Choice = {
@@ -163,6 +163,22 @@ function AcademyBriefing({ step, answer, onAnswer }: { step: number; answer: str
   </section>;
 }
 
+type BotMessage = { role: "bot" | "user"; text: string; kind?: "safe" | "coach" | "blocked" };
+const starterBotMessage: BotMessage = { role: "bot", text: "I’m the simulated DASI Practice Bot. Give me a fictional, low-risk task and tell me the format you want. I’ll show you how the prompt changes the result." };
+
+function inspectPracticePrompt(prompt: string) {
+  const normalized = prompt.toLowerCase();
+  const sensitive = /northstar|dasi-\d|\(305\)|supplier pricing|buyer mobile|confidential|export.controlled|\$\d/.test(normalized);
+  const hasGoal = /draft|create|write|summarize|compare|explain/.test(normalized);
+  const hasFormat = /bullet|table|email|list|three|3 |format/.test(normalized);
+  const hasCheck = /missing|uncertain|assumption|do not invent|only use|flag/.test(normalized);
+  const checks = { hasGoal, hasFormat, hasCheck };
+  if (sensitive) return { kind: "blocked" as const, text: "Data gate triggered. This looks like customer, quote, pricing, contact, or controlled information. Do not use real DASI data in this practice bot. Replace it with fictional placeholders and include only what the task needs.", checks };
+  if (!hasGoal) return { kind: "coach" as const, text: "I need a job to do. Start with an action such as ‘Draft,’ ‘Summarize,’ or ‘Create,’ then name the audience and purpose.", checks };
+  if (!hasFormat || !hasCheck) return { kind: "coach" as const, text: `Good start. Add ${!hasFormat ? "a requested format" : "a rule for missing information and uncertainty"}. A useful prompt tells me what success looks like instead of making me guess.`, checks };
+  return { kind: "safe" as const, text: "FICTIONAL PRACTICE DRAFT\n• Part requirement: fuel control unit; availability is not yet verified.\n• Logistics concept: use the approved lane after confirmation.\n• Open items: supplier stock, trace, price, and lead time require source verification.\n\nHuman check: compare every claim with approved source records before use.", checks };
+}
+
 const storyBeats = [
   {
     speaker: "JORDAN",
@@ -312,6 +328,10 @@ export default function Home() {
   const [storyBeat, setStoryBeat] = useState(0);
   const [academyStep, setAcademyStep] = useState(0);
   const [academyAnswer, setAcademyAnswer] = useState<string | null>(null);
+  const [botInput, setBotInput] = useState("");
+  const [botMessages, setBotMessages] = useState<BotMessage[]>([starterBotMessage]);
+  const [labCleared, setLabCleared] = useState(false);
+  const [promptChecks, setPromptChecks] = useState({ hasGoal: false, hasFormat: false, hasCheck: false });
   const [stage, setStage] = useState(0);
   const [mistakes, setMistakes] = useState(0);
   const [stageMistakes, setStageMistakes] = useState([0, 0, 0, 0]);
@@ -375,6 +395,16 @@ export default function Home() {
     }
   }
 
+  function sendPracticePrompt() {
+    const prompt = botInput.trim();
+    if (!prompt) return;
+    const result = inspectPracticePrompt(prompt);
+    setBotMessages((messages) => [...messages, { role: "user", text: prompt }, { role: "bot", text: result.text, kind: result.kind }]);
+    setPromptChecks(result.checks);
+    if (result.kind === "safe") setLabCleared(true);
+    setBotInput("");
+  }
+
   async function nextStage() {
     if (!feedback?.correct) return;
     if (stage === 3) {
@@ -428,6 +458,10 @@ export default function Home() {
     setStoryBeat(0);
     setAcademyStep(0);
     setAcademyAnswer(null);
+    setBotInput("");
+    setBotMessages([starterBotMessage]);
+    setLabCleared(false);
+    setPromptChecks({ hasGoal: false, hasFormat: false, hasCheck: false });
   }
 
   function completeOnboarding(nextProfile: LearnerProfile) {
@@ -466,7 +500,7 @@ export default function Home() {
             <div className="episode-kicker"><span>EPISODE 01</span><i /> DASI AI SAFETY PILOT</div>
             <div className="dashboard-heading">
               <div><h1>The AOG Data<br />Checkpoint</h1><p>Help the DASI team use AI without exposing customer, supplier, pricing, or sourcing information.</p></div>
-              <div className="time-card"><small>ESTIMATED TIME</small><strong>15 min</strong><span>Briefing + scenario</span></div>
+              <div className="time-card"><small>ESTIMATED TIME</small><strong>18 min</strong><span>Briefing + scenario</span></div>
             </div>
             <div className="dashboard-grid">
               <div>
@@ -503,7 +537,22 @@ export default function Home() {
             <header className="academy-header"><div><span className="episode-kicker"><span>AI PREFLIGHT</span><i /> LEARN + PRACTICE</span><h1>First, build your AI instincts.</h1><p>Eight short cards based on recognized AI risk-management and literacy guidance—translated into DASI work.</p></div><div className="academy-count"><strong>{String(academyStep + 1).padStart(2, "0")}</strong><span>/ {String(academySlides.length).padStart(2, "0")}</span></div></header>
             <div className="academy-progress" style={{ gridTemplateColumns: `repeat(${academySlides.length}, 1fr)` }} aria-label={`AI preflight card ${academyStep + 1} of ${academySlides.length}`}>{academySlides.map((slide, index) => <i className={index <= academyStep ? "active" : ""} key={slide.label} />)}</div>
             <AcademyBriefing step={academyStep} answer={academyAnswer} onAnswer={setAcademyAnswer} />
-            <div className="academy-controls"><button className="back-button" disabled={academyStep === 0} type="button" onClick={() => { setAcademyAnswer(null); setAcademyStep((value) => Math.max(0, value - 1)); }}>← Back</button><span>{academySlides[academyStep].chapter} · Card {academyStep + 1} of {academySlides.length}</span>{academyStep < academySlides.length - 1 ? <button className="primary-button compact" disabled={Boolean(academySlides[academyStep].choices) && !academySlides[academyStep].choices?.find((choice) => choice.id === academyAnswer)?.correct} type="button" onClick={() => { setAcademyAnswer(null); setAcademyStep((value) => value + 1); }}>{academySlides[academyStep].choices ? "Check cleared" : "Got it — next"} <span>→</span></button> : <button className="primary-button compact" disabled={!academySlides[academyStep].choices?.find((choice) => choice.id === academyAnswer)?.correct} type="button" onClick={() => { setStoryBeat(0); setView("story"); }}>Watch the scenario <span>▶</span></button>}</div>
+            <div className="academy-controls"><button className="back-button" disabled={academyStep === 0} type="button" onClick={() => { setAcademyAnswer(null); setAcademyStep((value) => Math.max(0, value - 1)); }}>← Back</button><span>{academySlides[academyStep].chapter} · Card {academyStep + 1} of {academySlides.length}</span>{academyStep < academySlides.length - 1 ? <button className="primary-button compact" disabled={Boolean(academySlides[academyStep].choices) && !academySlides[academyStep].choices?.find((choice) => choice.id === academyAnswer)?.correct} type="button" onClick={() => { setAcademyAnswer(null); setAcademyStep((value) => value + 1); }}>{academySlides[academyStep].choices ? "Check cleared" : "Got it — next"} <span>→</span></button> : <button className="primary-button compact" disabled={!academySlides[academyStep].choices?.find((choice) => choice.id === academyAnswer)?.correct} type="button" onClick={() => setView("lab")}>Open practice bot <span>→</span></button>}</div>
+          </div>
+        )}
+
+        {view === "lab" && (
+          <div className="bot-lab page-enter">
+            <header className="bot-lab-header"><div><span className="episode-kicker"><span>SIMULATION LAB</span><i /> SAFE PRACTICE</span><h1>Try prompting the bot.</h1><p>This is a rule-based training simulation—not a live AI model. Use fictional information only.</p></div><button className="text-button" type="button" onClick={() => { setStoryBeat(0); setView("story"); }}>Skip practice</button></header>
+            <div className="bot-lab-grid">
+              <section className="practice-chat comic-box" aria-label="DASI Practice Bot conversation">
+                <div className="practice-chat-title"><span><i /> DASI PRACTICE BOT</span><b>SIMULATED</b></div>
+                <div className="practice-messages" aria-live="polite">{botMessages.map((message, index) => <div className={`practice-message ${message.role} ${message.kind ?? ""}`} key={`${message.role}-${index}`}><span>{message.role === "bot" ? "BOT" : "YOU"}</span><p>{message.text}</p></div>)}</div>
+                <div className="practice-suggestions"><span>TRY A STARTER</span>{["Help me with an RFQ", "Draft three bullets from fictional part and logistics facts. Flag missing information and do not invent details.", "Summarize Northstar RFQ DASI-84729 and supplier pricing"].map((prompt) => <button key={prompt} onClick={() => setBotInput(prompt)} type="button">{prompt}</button>)}</div>
+                <form className="practice-composer" onSubmit={(event) => { event.preventDefault(); sendPracticePrompt(); }}><label htmlFor="practice-prompt">Your fictional practice prompt</label><textarea id="practice-prompt" onChange={(event) => setBotInput(event.target.value)} placeholder="Draft three bullets using only these fictional facts…" rows={4} value={botInput} /><div><small>Never enter real customer, supplier, pricing, trace, personal, or controlled data.</small><button className="primary-button compact" disabled={!botInput.trim()} type="submit">Send prompt <span>↑</span></button></div></form>
+              </section>
+              <aside className="prompt-coach comic-box"><span>PROMPT COACH</span><h2>Build a reviewable request</h2><div className={promptChecks.hasGoal ? "done" : ""}><i>{promptChecks.hasGoal ? "✓" : "1"}</i><p><b>Clear goal</b><small>Say what the bot should do.</small></p></div><div className={promptChecks.hasFormat ? "done" : ""}><i>{promptChecks.hasFormat ? "✓" : "2"}</i><p><b>Useful format</b><small>Bullets, table, email, or another structure.</small></p></div><div className={promptChecks.hasCheck ? "done" : ""}><i>{promptChecks.hasCheck ? "✓" : "3"}</i><p><b>Uncertainty rule</b><small>Flag gaps; never invent missing facts.</small></p></div><section><b>Practice boundary</b><p>The simulator recognizes a few patterns and returns coached examples. It does not send your prompt to an AI provider.</p></section>{labCleared && <button className="primary-button" type="button" onClick={() => { setStoryBeat(0); setView("story"); }}>Practice cleared — watch scene <span>▶</span></button>}</aside>
+            </div>
           </div>
         )}
 

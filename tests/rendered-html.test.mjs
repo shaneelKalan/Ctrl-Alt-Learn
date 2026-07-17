@@ -39,6 +39,10 @@ test("ships guided learner onboarding", async () => {
   assert.match(page, /Not assessed yet/);
   assert.match(page, /These are episode results/);
   assert.match(page, /stageMistakes/);
+  assert.match(page, /DASI PRACTICE BOT/);
+  assert.match(page, /rule-based training simulation/);
+  assert.match(page, /Data gate triggered/);
+  assert.match(page, /Practice cleared/);
 });
 
 test("documents authoritative curriculum sources and DASI review boundaries", async () => {

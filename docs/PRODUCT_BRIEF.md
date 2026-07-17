@@ -189,7 +189,7 @@ Initial aviation scenario themes:
 
 - Four-step onboarding: welcome, learner profile, AI skill/goals, and a trust diagnostic.
 - Personalized learner identity and certificate name.
-- One fifteen-minute playable episode combining an AI preflight, acted DASI AOG sourcing scenario, and coached data-safety mission; seven additional Intro 101 missions remain planned for the complete course.
+- One eighteen-minute playable episode combining an AI preflight, simulated practice bot, acted DASI AOG sourcing scenario, and coached data-safety mission; seven additional Intro 101 missions remain planned for the complete course.
 - Server-backed learners, course assignments, organization settings, and completion records.
 - Admin control room with Overview, People, Assignments, Courses, Reports, and Settings.
 - CSV completion export and print-to-PDF learner certificate.
