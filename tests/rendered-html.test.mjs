@@ -62,7 +62,8 @@ test("ships the full eight-mission course", async () => {
 
   const missionIds = ["meet-ai", "superpowers-limits", "data-safety", "work-mode", "life-mode", "prompt-repair", "trust-verify", "final-shift"];
   for (const id of missionIds) assert.match(course, new RegExp(`id: "${id}"`));
-  for (const kind of ["info", "choice", "multi", "sort", "builder"]) assert.match(player, new RegExp(`kind === "${kind}"`));
+  for (const kind of ["lesson", "choice", "multi", "sort", "builder"]) assert.match(player, new RegExp(`kind === "${kind}"`));
+  assert.match(course, /fieldGuide/);
   assert.match(page, /cal-course-progress-v2/);
   assert.match(page, /MissionPlayer/);
 });

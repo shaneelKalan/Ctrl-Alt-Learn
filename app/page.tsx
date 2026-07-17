@@ -3,10 +3,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { AdminPortal } from "./AdminPortal";
 import { LearnerProfile, Onboarding } from "./Onboarding";
-import { course, courseMinutes, dimensionLabels, missionScore, type Dimension, type Mission } from "./course";
+import { course, courseMinutes, dimensionLabels, fieldGuide, missionScore, type Dimension, type Mission } from "./course";
 import { DimensionStats, emptyDimensionStats, MissionPlayer } from "./MissionPlayer";
 
-type View = "dashboard" | "mission" | "debrief" | "results";
+type View = "dashboard" | "mission" | "debrief" | "results" | "guide";
 type AppMode = "loading" | "onboarding" | "learner" | "admin";
 
 type MissionRecord = { score: number; mistakes: number; completedAt: string };
@@ -89,11 +89,15 @@ function overallScore(progress: CourseProgress) {
 function MissionRail({
   progress,
   activeId,
+  guideActive,
   onSelect,
+  onGuide,
 }: {
   progress: CourseProgress;
   activeId: string | null;
+  guideActive: boolean;
   onSelect: (mission: Mission) => void;
+  onGuide: () => void;
 }) {
   const completedCount = Object.keys(progress.missions).filter((id) => course.some((m) => m.id === id)).length;
   return (
@@ -124,6 +128,10 @@ function MissionRail({
           );
         })}
       </nav>
+      <button className={`mission-link guide-link ${guideActive ? "active" : ""}`} type="button" onClick={onGuide}>
+        <span>📒</span>
+        <p>Field Guide<small>Cheat sheets · always open</small></p>
+      </button>
       <div className="rail-progress">
         <span><b>Course progress</b><b>{completedCount}/{course.length}</b></span>
         <i><b style={{ width: `${(completedCount / course.length) * 100}%` }} /></i>
@@ -290,8 +298,10 @@ export default function Home() {
     <main className="app-shell">
       <MissionRail
         activeId={view === "mission" && activeMission ? activeMission.id : null}
+        guideActive={view === "guide"}
         progress={progress}
         onSelect={(mission) => startMission(mission)}
+        onGuide={() => setView("guide")}
       />
       <section className="workspace">
         <header className="topbar">
@@ -383,6 +393,27 @@ export default function Home() {
               )}
               <button className="secondary-button" type="button" onClick={() => { setActiveMission(null); setView("dashboard"); }}>Return to course map</button>
             </div>
+          </div>
+        )}
+
+        {view === "guide" && (
+          <div className="guide page-enter">
+            <div className="episode-kicker"><span>FIELD GUIDE</span><i /> REFERENCE, NOT HOMEWORK</div>
+            <div className="guide-heading">
+              <h1>Steal these.<br />That's what they're for.</h1>
+              <p>Every formula, rule, and red-flag list from the course on one page. Nothing to memorize — just come back whenever you need it.</p>
+            </div>
+            <div className="guide-grid">
+              {fieldGuide.map((card) => (
+                <article className="guide-card comic-box" key={card.id}>
+                  <div className="guide-card-top"><span aria-hidden="true">{card.icon}</span><div><strong>{card.title}</strong><small>{card.subtitle}</small></div></div>
+                  <ul>
+                    {card.lines.map((line) => <li key={line}>{line}</li>)}
+                  </ul>
+                </article>
+              ))}
+            </div>
+            <div className="result-actions"><button className="secondary-button" type="button" onClick={() => setView("dashboard")}>Back to course map</button></div>
           </div>
         )}
 

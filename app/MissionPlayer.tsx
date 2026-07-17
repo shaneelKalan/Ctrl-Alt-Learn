@@ -91,6 +91,7 @@ export function MissionPlayer({
   const [multiPicks, setMultiPicks] = useState<string[]>([]);
   const [sortPicks, setSortPicks] = useState<Record<string, string>>({});
   const [sortChecked, setSortChecked] = useState(false);
+  const [beatIndex, setBeatIndex] = useState(0);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
 
   const step = mission.steps[stepIndex];
@@ -120,6 +121,7 @@ export function MissionPlayer({
     setMultiPicks([]);
     setSortPicks({});
     setSortChecked(false);
+    setBeatIndex(0);
     setFeedback(null);
   }
 
@@ -189,29 +191,47 @@ export function MissionPlayer({
       <section className="challenge comic-box">
         <div className="challenge-heading">
           <span className="caption-label">
-            {step.kind === "info" ? "FIELD BRIEFING" : `CHALLENGE ${stepIndex + 1} OF ${mission.steps.length}`}
+            {step.kind === "lesson" ? "FIELD BRIEFING · NO WRONG ANSWERS HERE" : `CHALLENGE ${stepIndex + 1} OF ${mission.steps.length}`}
           </span>
           <h1>{step.title}</h1>
           <p>{step.intro}</p>
         </div>
 
-        {step.kind === "info" && (
-          <>
-            <div className="info-points">
-              {step.points.map((point, index) => (
-                <article className="info-point" key={point.title}>
-                  <span>{String(index + 1).padStart(2, "0")}</span>
-                  <div><strong>{point.title}</strong><p>{point.copy}</p></div>
-                </article>
-              ))}
+        {step.kind === "lesson" && (() => {
+          const beat = step.beats[beatIndex];
+          const lastBeat = beatIndex === step.beats.length - 1;
+          return (
+            <div className="lesson-beats">
+              <div className="beat-card page-enter" key={beat.title}>
+                <span className="beat-icon" aria-hidden="true">{beat.icon}</span>
+                <h2>{beat.title}</h2>
+                <p>{beat.copy}</p>
+              </div>
+              <div className="beat-controls">
+                <button
+                  className="text-button beat-back"
+                  disabled={beatIndex === 0}
+                  type="button"
+                  onClick={() => setBeatIndex((value) => Math.max(0, value - 1))}
+                >
+                  ← Back
+                </button>
+                <div className="beat-dots" aria-label={`Idea ${beatIndex + 1} of ${step.beats.length}`}>
+                  {step.beats.map((item, index) => (
+                    <i className={index === beatIndex ? "active" : index < beatIndex ? "done" : ""} key={item.title} />
+                  ))}
+                </div>
+                <button
+                  className="primary-button beat-next"
+                  type="button"
+                  onClick={() => (lastBeat ? advance() : setBeatIndex((value) => value + 1))}
+                >
+                  {lastBeat ? (isLast ? "Finish mission" : "Got it") : "Next idea"} <span>→</span>
+                </button>
+              </div>
             </div>
-            <div className="info-continue">
-              <button className="primary-button" type="button" onClick={advance}>
-                {isLast ? "Finish mission" : "Got it — next"} <span>→</span>
-              </button>
-            </div>
-          </>
-        )}
+          );
+        })()}
 
         {step.kind === "choice" && <ChoiceCards choices={step.choices} selected={selected} onChoose={answerChoice} />}
 
@@ -298,7 +318,7 @@ export function MissionPlayer({
           </div>
         )}
 
-        {feedback && step.kind !== "info" && (
+        {feedback && step.kind !== "lesson" && (
           <div className={`feedback ${feedback.correct ? "correct" : "coach"}`} role="status">
             <span>{feedback.correct ? "✓" : "!"}</span>
             <p><strong>{feedback.correct ? "Cleared for the next step" : "Coaching moment"}</strong>{feedback.text}</p>

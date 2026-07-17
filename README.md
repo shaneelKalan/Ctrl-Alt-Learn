@@ -17,9 +17,11 @@ effectively — through playable missions, not slideware.
 7. **Verify Before You Fly** — verification proportional to impact
 8. **The Final Shift Challenge** — capstone combining every skill
 
-Five activity types (teaching briefings, scenario choices, redaction boards,
-classification lanes, and a guided prompt builder), sequential unlocks, a
-mastery radar across four scoring dimensions, per-mission debriefs, and a
+Teaching-first and ADHD-friendly by design: tap-through lesson beats (one idea
+per screen), quick knowledge checks between them, four hands-on activity types
+(scenario choices, redaction boards, classification lanes, and a guided prompt
+builder), sequential unlocks, a mastery radar across four scoring dimensions,
+per-mission debriefs, an always-available Field Guide of cheat sheets, and a
 printable completion certificate.
 
 ## Quick start
