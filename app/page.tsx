@@ -314,6 +314,7 @@ export default function Home() {
   const [academyAnswer, setAcademyAnswer] = useState<string | null>(null);
   const [stage, setStage] = useState(0);
   const [mistakes, setMistakes] = useState(0);
+  const [stageMistakes, setStageMistakes] = useState([0, 0, 0, 0]);
   const [selected, setSelected] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{ correct: boolean; text: string } | null>(null);
   const [redactions, setRedactions] = useState<string[]>([]);
@@ -353,20 +354,25 @@ export default function Home() {
     }
   }, []);
 
-  const mastery = useMemo(
-    () => [
-      { name: "Safety", value: stage > 0 ? 84 : 72, color: "teal" },
-      { name: "Judgment", value: stage > 1 ? 76 : 61, color: "yellow" },
-      { name: "Verification", value: stage > 2 ? 78 : 52, color: "blue" },
-      { name: "Prompt craft", value: stage > 2 ? 73 : 46, color: "purple" },
-    ],
-    [stage],
-  );
+  const mastery = useMemo(() => {
+    const completedThrough = view === "results" ? 4 : stage + (feedback?.correct ? 1 : 0);
+    const measured = (minimum: number) => completedThrough >= minimum;
+    const value = (...steps: number[]) => Math.max(70, 100 - steps.reduce((total, index) => total + stageMistakes[index] * 10, 0));
+    return [
+      { name: "Safety", value: measured(2) ? value(0, 1) : null, color: "teal", evidence: "Tool + data choices" },
+      { name: "Judgment", value: measured(1) ? value(0) : null, color: "yellow", evidence: "Workflow decision" },
+      { name: "Prompt craft", value: measured(3) ? value(2) : null, color: "purple", evidence: "Prompt repair" },
+      { name: "Verification", value: measured(4) ? value(3) : null, color: "blue", evidence: "Source check" },
+    ];
+  }, [feedback?.correct, stage, stageMistakes, view]);
 
   function answer(choice: Choice) {
     setSelected(choice.id);
     setFeedback({ correct: choice.correct, text: choice.coach });
-    if (!choice.correct) setMistakes((count) => count + 1);
+    if (!choice.correct && selected !== choice.id) {
+      setMistakes((count) => count + 1);
+      setStageMistakes((values) => values.map((count, index) => index === stage ? count + 1 : count));
+    }
   }
 
   async function nextStage() {
@@ -405,13 +411,17 @@ export default function Home() {
         ? "Clean handoff. You removed customer and direct identifiers while keeping the sourcing and logistics facts needed for the task."
         : "Not quite. Remove the customer, buyer contact, and unique RFQ reference, but keep the part need and logistics facts required for the update.",
     });
-    if (!correct) setMistakes((count) => count + 1);
+    if (!correct) {
+      setMistakes((count) => count + 1);
+      setStageMistakes((values) => values.map((count, index) => index === 1 ? count + 1 : count));
+    }
   }
 
   function resetCourse() {
     setView("dashboard");
     setStage(0);
     setMistakes(0);
+    setStageMistakes([0, 0, 0, 0]);
     setSelected(null);
     setFeedback(null);
     setRedactions([]);
@@ -472,14 +482,16 @@ export default function Home() {
                 </div>
               </div>
               <aside className="mastery-panel comic-box">
-                <div className="panel-title"><div><span>MASTERY RADAR</span><h2>Skills that update as you play</h2></div><b>LIVE</b></div>
+                <div className="panel-title"><div><span>EPISODE SKILL CHECK</span><h2>Evidence from your choices</h2></div><b>SESSION</b></div>
                 {mastery.map((item) => (
-                  <div className="mastery-row" key={item.name}>
-                    <span><b>{item.name}</b><b>{item.value}%</b></span>
-                    <i><b className={item.color} style={{ width: `${item.value}%` }} /></i>
+                  <div className={`mastery-row ${item.value === null ? "pending" : ""}`} key={item.name}>
+                    <span><b>{item.name}</b><b>{item.value === null ? "—" : `${item.value}%`}</b></span>
+                    <i><b className={item.color} style={{ width: `${item.value ?? 0}%` }} /></i>
+                    <small>{item.value === null ? "Not assessed yet" : item.evidence}</small>
                   </div>
                 ))}
-                <div className="desk-note"><span>DESK NOTE</span><strong>Pause → classify → minimize → verify.</strong><p>The safest prompt starts before you type.</p></div>
+                <div className="mastery-explainer"><b>How this works</b><p>Each skill unlocks only after its related decision. Coaching attempts affect the session score; unplayed skills stay blank.</p></div>
+                <div className="desk-note"><span>DESK NOTE</span><strong>Pause → classify → minimize → verify.</strong><p>These are episode results—not a permanent rating of you.</p></div>
                 <div className="certificate-teaser"><span>☆</span><p><strong>Certificate unlocked at the finish</strong><small>Complete the final coached challenge to export your record.</small></p></div>
               </aside>
             </div>
@@ -518,6 +530,7 @@ export default function Home() {
               ))}
             </div>
             <div className="mission-hud"><span><b>CREW XP</b><strong>{xp}/100</strong></span><i><b style={{ width: `${xp}%` }} /></i><em>{stageDetails[stage].reward} ready</em></div>
+            <div className="live-skill-strip" aria-label="Live episode skill evidence">{mastery.map((item) => <span className={item.value === null ? "pending" : "measured"} key={item.name}><b>{item.name}</b><em>{item.value === null ? "Waiting" : `${item.value}%`}</em></span>)}</div>
             <OfficeScene stage={stage} cleared={Boolean(feedback?.correct)} />
             <section className="challenge comic-box">
               <div className="challenge-heading">
