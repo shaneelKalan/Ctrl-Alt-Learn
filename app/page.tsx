@@ -124,7 +124,14 @@ const verifyChoices: Choice[] = [
 
 const stageLabels = ["Choose", "Classify", "Prompt", "Verify"];
 
-function OfficeScene({ stage }: { stage: number }) {
+const stageDetails = [
+  { eyebrow: "TOOL CHECK", reward: "+25 XP", consequence: "The incident log stays inside approved systems." },
+  { eyebrow: "DATA SHIELD", reward: "+25 XP", consequence: "Maya keeps the useful facts without exposing a customer." },
+  { eyebrow: "PROMPT POWER", reward: "+25 XP", consequence: "The chatbot gets a clear job—and no permission to invent." },
+  { eyebrow: "HUMAN CONTROL", reward: "+25 XP", consequence: "A qualified reviewer stays accountable for what leaves the desk." },
+];
+
+function OfficeScene({ stage, cleared = false }: { stage: number; cleared?: boolean }) {
   const bubble = [
     "The chatbot could summarize this delay report in seconds. Can I paste the whole incident log?",
     "Which details should leave the prompt before it goes anywhere?",
@@ -133,7 +140,7 @@ function OfficeScene({ stage }: { stage: number }) {
   ][stage];
 
   return (
-    <div className="scene" role="img" aria-label="Maya and Jordan at an aviation operations help desk">
+    <div className={`scene ${cleared ? "scene-cleared" : ""}`} role="img" aria-label="Maya and Jordan at an aviation operations help desk">
       <div className="scene-header">
         <span><i className="record-dot" /> HELP DESK STUDIO · SCENE {String(stage + 1).padStart(2, "0")}</span>
         <span>OPS SUPPORT · TUESDAY, 9:42 AM</span>
@@ -158,6 +165,7 @@ function OfficeScene({ stage }: { stage: number }) {
         <div className="mug" />
       </div>
       <div className="scene-caption">Your move: protect the data without grounding the work.</div>
+      {cleared && <div className="scene-stamp" aria-hidden="true">SMART CALL! ✓</div>}
     </div>
   );
 }
@@ -227,6 +235,7 @@ export default function Home() {
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "local">("idle");
 
   const score = Math.max(80, 100 - mistakes * 5);
+  const xp = stage * 25 + (view === "results" ? 25 : 0);
 
   useEffect(() => {
     const savedProfile = window.localStorage.getItem("cal-learner-profile-v1");
@@ -366,6 +375,11 @@ export default function Home() {
                   <div><span className="caption-label">TODAY’S CALL</span><h2>Can a chatbot see this incident report?</h2><p>Choose a safe tool, remove unnecessary data, build a useful prompt, and verify the result.</p></div>
                   <button className="primary-button" type="button" onClick={() => setView("mission")}>Start mission <span>→</span></button>
                 </div>
+                <div className="mission-objectives" aria-label="Mission objectives">
+                  <article><span>01</span><p><strong>Protect the passenger</strong><small>Spot details that do not belong in a prompt.</small></p></article>
+                  <article><span>02</span><p><strong>Coach the chatbot</strong><small>Turn a vague request into a useful instruction.</small></p></article>
+                  <article><span>03</span><p><strong>Keep a human flying</strong><small>Verify before a polished answer leaves the desk.</small></p></article>
+                </div>
               </div>
               <aside className="mastery-panel comic-box">
                 <div className="panel-title"><div><span>MASTERY RADAR</span><h2>Skills that update as you play</h2></div><b>LIVE</b></div>
@@ -389,7 +403,8 @@ export default function Home() {
                 <div className={index < stage ? "done" : index === stage ? "active" : ""} key={label}><span>{index < stage ? "✓" : index + 1}</span><b>{label}</b></div>
               ))}
             </div>
-            <OfficeScene stage={stage} />
+            <div className="mission-hud"><span><b>CREW XP</b><strong>{xp}/100</strong></span><i><b style={{ width: `${xp}%` }} /></i><em>{stageDetails[stage].reward} ready</em></div>
+            <OfficeScene stage={stage} cleared={Boolean(feedback?.correct)} />
             <section className="challenge comic-box">
               <div className="challenge-heading">
                 <span className="caption-label">CHALLENGE {stage + 1} OF 4</span>
@@ -443,6 +458,7 @@ export default function Home() {
                   {feedback.correct && <button type="button" disabled={saveStatus === "saving"} onClick={() => void nextStage()}>{saveStatus === "saving" ? "Saving…" : stage === 3 ? "See my results" : "Next scene"} →</button>}
                 </div>
               )}
+              {feedback?.correct && <div className="consequence-card"><span>{stageDetails[stage].eyebrow}</span><p><strong>What changed?</strong>{stageDetails[stage].consequence}</p><b>{stageDetails[stage].reward}</b></div>}
             </section>
           </div>
         )}
@@ -462,6 +478,11 @@ export default function Home() {
               </section>
               <section className="takeaway-card comic-box"><span>KEEP THIS RULE</span><h2>Pause. Classify. Minimize. Verify.</h2><p>Use only approved tools, share only the data needed, and review important outputs against a trusted source.</p></section>
             </div>
+            <section className="badge-shelf comic-box" aria-label="Mission rewards">
+              <div><span className="badge-icon">◈</span><p><small>BADGE EARNED</small><strong>Data Shield</strong></p></div>
+              <div><span className="badge-icon verify">✓</span><p><small>HABIT UNLOCKED</small><strong>Trust, then verify</strong></p></div>
+              <div><span className="badge-icon xp">100</span><p><small>CREW XP</small><strong>Full mission credit</strong></p></div>
+            </section>
             <section className="certificate-form comic-box">
               <div><span className="caption-label">COMPLETION RECORD</span><h2>Make the certificate yours</h2><p>Enter the learner name exactly as it should appear on the printable certificate.</p></div>
               <label><span>Learner name</span><input value={learnerName} onChange={(event) => setLearnerName(event.target.value)} placeholder="Enter full name" /></label>

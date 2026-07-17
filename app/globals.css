@@ -255,3 +255,51 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 4px solid 
   .certificate-border { width: 100%; height: 100%; display: grid; place-items: center; align-content: center; padding: .45in; border: 10px double #202744; outline: 5px solid #ffd665; outline-offset: -20px; background: #fffdf7; text-align: center; }
   .certificate-brand { margin-bottom: .2in; color: #078473; font-size: 18pt; font-weight: 900; }.certificate-border > span { color: #ff766b; font-family: monospace; font-size: 10pt; font-weight: 900; letter-spacing: .18em; }.certificate-border p { margin: .12in 0; color: #626b84; font-size: 11pt; }.certificate-border h1 { min-width: 70%; margin: .05in 0; padding-bottom: .08in; border-bottom: 2px solid #202744; font-size: 35pt; letter-spacing: -.04em; }.certificate-border h2 { margin: .05in 0; font-size: 23pt; }.certificate-border h3 { margin: .05in 0 .18in; color: #078473; font-size: 12pt; }.certificate-meta { width: 75%; display: grid; grid-template-columns: repeat(3, 1fr); gap: .2in; margin-top: .12in; }.certificate-meta span { display: grid; gap: 5px; font-size: 10pt; font-weight: 800; }.certificate-meta small { color: #626b84; font-family: monospace; font-size: 6pt; letter-spacing: .1em; }.certificate-rule { margin-top: .25in; padding: .08in .2in; border: 2px solid #202744; background: #ffd665; font-size: 10pt; font-weight: 900; }
 }
+
+/* Playful mission polish */
+.scene { transition: filter .25s ease, transform .25s ease; }
+.scene-cleared { filter: saturate(1.08); }
+.scene-cleared .speech-bubble { border-color: var(--teal-dark); box-shadow: 6px 6px 0 var(--teal-dark); }
+.scene-stamp { position: absolute; z-index: 9; right: 22px; bottom: 22px; padding: 9px 12px; border: 3px solid var(--ink); border-radius: 6px; background: var(--yellow); color: var(--ink); font-family: var(--font-geist-mono); font-size: 12px; font-weight: 950; letter-spacing: .08em; transform: rotate(-6deg); box-shadow: 3px 3px 0 var(--ink); animation: stamp-in .28s cubic-bezier(.2,.9,.3,1.35); }
+@keyframes stamp-in { from { opacity: 0; transform: rotate(-15deg) scale(1.5); } to { opacity: 1; transform: rotate(-6deg) scale(1); } }
+.mission-objectives { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; }
+.mission-objectives article { display: flex; align-items: flex-start; gap: 10px; padding: 13px; border: 2px solid var(--ink); border-radius: 10px; background: #fff; box-shadow: 3px 3px 0 var(--ink); }
+.mission-objectives article > span { display: grid; width: 28px; height: 28px; flex: 0 0 28px; place-items: center; border-radius: 7px; background: var(--navy); color: #fff; font-family: var(--font-geist-mono); font-size: 8px; font-weight: 900; }
+.mission-objectives p { display: grid; gap: 3px; margin: 0; }
+.mission-objectives strong { font-size: 10px; }
+.mission-objectives small { color: var(--muted); font-size: 8px; line-height: 1.35; }
+.mission-hud { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px; margin-bottom: 14px; padding: 9px 13px; border: 2px solid var(--ink); border-radius: 10px; background: var(--navy-deep); color: #fff; box-shadow: 3px 3px 0 var(--ink); }
+.mission-hud > span { display: flex; align-items: baseline; gap: 7px; }
+.mission-hud span b { color: var(--yellow); font-family: var(--font-geist-mono); font-size: 7px; letter-spacing: .1em; }
+.mission-hud span strong { font-size: 12px; }
+.mission-hud > i { overflow: hidden; height: 7px; border-radius: 99px; background: #ffffff24; }
+.mission-hud > i b { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--teal), var(--yellow)); transition: width .35s ease; }
+.mission-hud em { color: #cbd3ef; font-size: 8px; font-style: normal; font-weight: 800; }
+.consequence-card { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 14px; margin-top: 10px; padding: 13px 15px; border: 2px dashed var(--teal-dark); border-radius: 10px; background: var(--mint); animation: slide-up .25s ease-out; }
+.consequence-card > span { color: var(--teal-dark); font-family: var(--font-geist-mono); font-size: 7px; font-weight: 950; letter-spacing: .1em; }
+.consequence-card p { display: flex; gap: 5px; margin: 0; color: #345b59; font-size: 10px; }
+.consequence-card p strong { color: var(--ink); }
+.consequence-card > b { padding: 6px 8px; border: 2px solid var(--ink); border-radius: 7px; background: var(--yellow); color: var(--ink); font-family: var(--font-geist-mono); font-size: 8px; box-shadow: 2px 2px 0 var(--ink); }
+@keyframes slide-up { from { opacity: 0; transform: translateY(8px); } }
+.badge-shelf { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; margin-top: 20px; padding: 0; overflow: hidden; text-align: left; }
+.badge-shelf > div { display: flex; align-items: center; gap: 13px; padding: 18px; border-right: 2px solid var(--ink); background: #fff; }
+.badge-shelf > div:last-child { border-right: 0; }
+.badge-icon { display: grid; width: 48px; height: 48px; flex: 0 0 48px; place-items: center; border: 3px solid var(--ink); border-radius: 50%; background: var(--teal); color: var(--ink); font-size: 22px; font-weight: 950; box-shadow: 3px 3px 0 var(--ink); }
+.badge-icon.verify { background: var(--yellow); }
+.badge-icon.xp { background: var(--purple); color: #fff; font-family: var(--font-geist-mono); font-size: 11px; }
+.badge-shelf p { display: grid; gap: 3px; margin: 0; }
+.badge-shelf small { color: var(--coral); font-family: var(--font-geist-mono); font-size: 7px; font-weight: 900; letter-spacing: .1em; }
+.badge-shelf strong { font-size: 12px; }
+@media (max-width: 760px) {
+  .mission-objectives, .badge-shelf { grid-template-columns: 1fr; }
+  .badge-shelf > div { border-right: 0; border-bottom: 2px solid var(--ink); }
+  .badge-shelf > div:last-child { border-bottom: 0; }
+  .mission-hud { grid-template-columns: auto 1fr; }
+  .mission-hud em { display: none; }
+  .consequence-card { grid-template-columns: 1fr auto; }
+  .consequence-card > span { grid-column: 1 / -1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .scene-stamp, .consequence-card { animation: none; }
+  .mission-hud > i b { transition: none; }
+}

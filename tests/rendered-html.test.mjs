@@ -20,6 +20,10 @@ test("ships guided learner onboarding", async () => {
   assert.match(onboarding, /YOUR BADGE/);
   assert.match(onboarding, /YOUR FLIGHT PLAN/);
   assert.match(onboarding, /TRUST CHECK/);
+  assert.match(onboarding, /Wrong answers are coaching moments/);
+  assert.match(page, /CREW XP/);
+  assert.match(page, /What changed\?/);
+  assert.match(page, /Data Shield/);
 });
 
 test("protects admin routes with an HTTP-only session cookie", async () => {
