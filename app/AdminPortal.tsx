@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 
 type AdminTab = "overview" | "people" | "assignments" | "courses" | "reports" | "settings";
 
@@ -40,6 +40,7 @@ type AdminData = {
   assignments: Assignment[];
   completions: Completion[];
   settings: Record<string, string>;
+  durableStorage?: boolean;
 };
 
 const tabs: { id: AdminTab; label: string; icon: string }[] = [
@@ -103,7 +104,7 @@ export function AdminPortal({ onExit }: { onExit: () => void }) {
           <label><span>Password</span><input autoFocus type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Enter admin password" /></label>
           {loginError && <div className="form-error" role="alert">{loginError}</div>}
           <button className="primary-button" type="submit">Open dashboard <span>→</span></button>
-          <div className="demo-warning"><b>Prototype access</b><span>Temporary password: <code>123456</code>. Do not store real employee-sensitive data until production authentication is added.</span></div>
+          <div className="demo-warning"><b>Prototype access</b><span>Use the pilot password configured by your deployment administrator. Do not store real employee-sensitive data until production authentication is added.</span></div>
         </form>
       </main>
     );
@@ -132,7 +133,18 @@ function AdminDashboard({ onExit, onSignedOut }: { onExit: () => void; onSignedO
     setLoading(false);
   }
 
-  useEffect(() => { void loadData(); }, []);
+  useEffect(() => {
+    let active = true;
+    fetch("/api/admin").then(async (response) => {
+      if (response.status === 401) { onSignedOut(); return; }
+      const payload = (await response.json()) as AdminData & { error?: string };
+      if (!active) return;
+      if (!response.ok) setError(payload.error ?? "The dashboard could not load.");
+      else setData(payload);
+      setLoading(false);
+    });
+    return () => { active = false; };
+  }, [onSignedOut]);
 
   async function action(payload: Record<string, unknown>, success: string) {
     setError("");
@@ -185,6 +197,7 @@ function AdminDashboard({ onExit, onSignedOut }: { onExit: () => void; onSignedO
           <div className="profile"><span>AD</span><p><strong>Training Admin</strong><small>Organization owner</small></p></div>
         </header>
         {(notice || error) && <div className={`admin-toast ${error ? "error" : ""}`} role="status">{error || notice}<button type="button" onClick={() => { setNotice(""); setError(""); }}>×</button></div>}
+        {!loading && data.durableStorage === false && <div className="admin-toast error" role="status">Preview storage is temporary. Connect Upstash Redis in Vercel before collecting pilot results.</div>}
 
         {loading ? <div className="admin-loading" role="status">Loading the control room…</div> : (
           <div className="admin-content page-enter">
@@ -193,7 +206,7 @@ function AdminDashboard({ onExit, onSignedOut }: { onExit: () => void; onSignedO
             {tab === "assignments" && <Assignments data={data} action={action} />}
             {tab === "courses" && <Courses data={data} action={action} />}
             {tab === "reports" && <Reports data={data} averageScore={averageScore} />}
-            {tab === "settings" && <Settings data={data} action={action} />}
+            {tab === "settings" && <Settings key={JSON.stringify(data.settings)} data={data} action={action} />}
           </div>
         )}
       </section>
@@ -273,7 +286,6 @@ function Reports({ data, averageScore }: { data: AdminData; averageScore: number
 
 function Settings({ data, action }: { data: AdminData; action: (payload: Record<string, unknown>, success: string) => Promise<boolean> }) {
   const [settings, setSettings] = useState(data.settings);
-  useEffect(() => setSettings(data.settings), [data.settings]);
   function update(key: string, value: string) { setSettings((current) => ({ ...current, [key]: value })); }
   return <>
     <PageHeading eyebrow="SETTINGS" title="Set your organization defaults" copy="Customize the pilot’s identity, expectations, certificate rules, and AI-use guidance." />

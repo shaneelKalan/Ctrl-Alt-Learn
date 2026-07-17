@@ -38,16 +38,15 @@ test("protects admin routes with an HTTP-only session cookie", async () => {
   assert.match(admin, /saveSettings/);
 });
 
-test("includes durable training records and a generated migration", async () => {
-  const [schema, migration, hosting] = await Promise.all([
-    source("db/schema.ts"),
-    source("drizzle/0000_plain_war_machine.sql"),
-    source(".openai/hosting.json"),
+test("includes Vercel-compatible durable pilot storage", async () => {
+  const [store, completion, readme] = await Promise.all([
+    source("db/index.ts"),
+    source("app/api/completions/route.ts"),
+    source("README.md"),
   ]);
 
-  assert.match(schema, /learners/);
-  assert.match(schema, /assignments/);
-  assert.match(schema, /completions/);
-  assert.match(migration, /CREATE TABLE `organization_settings`/);
-  assert.match(hosting, /"d1": "DB"/);
+  assert.match(store, /KV_REST_API_URL/);
+  assert.match(store, /UPSTASH_REDIS_REST_URL/);
+  assert.match(completion, /writeStore/);
+  assert.match(readme, /Deploy a test environment to Vercel/);
 });

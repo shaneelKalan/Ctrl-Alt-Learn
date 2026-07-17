@@ -224,6 +224,7 @@ export default function Home() {
   const [redactions, setRedactions] = useState<string[]>([]);
   const [learnerName, setLearnerName] = useState("");
   const [certificateId, setCertificateId] = useState("");
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "local">("idle");
 
   const score = Math.max(80, 100 - mistakes * 5);
 
@@ -232,6 +233,8 @@ export default function Home() {
     if (savedProfile) {
       try {
         const parsed = JSON.parse(savedProfile) as LearnerProfile;
+        // Browser-owned progress is intentionally synchronized after hydration.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setProfile(parsed);
         setLearnerName(parsed.name);
         setMode("learner");
@@ -270,7 +273,7 @@ export default function Home() {
     if (!choice.correct) setMistakes((count) => count + 1);
   }
 
-  function nextStage() {
+  async function nextStage() {
     if (!feedback?.correct) return;
     if (stage === 3) {
       const id = certificateId || `CAL-${new Date().getFullYear()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
@@ -280,11 +283,13 @@ export default function Home() {
         JSON.stringify({ completed: true, name: learnerName, certificateId: id }),
       );
       if (profile) {
-        void fetch("/api/completions", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...profile, score, certificateId: id }),
-        });
+        setSaveStatus("saving");
+        try {
+          const response = await fetch("/api/completions", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...profile, score, certificateId: id }) });
+          if (!response.ok) throw new Error("Completion could not be recorded");
+          const result = (await response.json()) as { durable?: boolean };
+          setSaveStatus(result.durable ? "saved" : "local");
+        } catch { setSaveStatus("local"); }
       }
       setView("results");
       return;
@@ -435,7 +440,7 @@ export default function Home() {
                 <div className={`feedback ${feedback.correct ? "correct" : "coach"}`} role="status">
                   <span>{feedback.correct ? "✓" : "!"}</span>
                   <p><strong>{feedback.correct ? "Cleared for the next step" : "Coaching moment"}</strong>{feedback.text}</p>
-                  {feedback.correct && <button type="button" onClick={nextStage}>{stage === 3 ? "See my results" : "Next scene"} →</button>}
+                  {feedback.correct && <button type="button" disabled={saveStatus === "saving"} onClick={() => void nextStage()}>{saveStatus === "saving" ? "Saving…" : stage === 3 ? "See my results" : "Next scene"} →</button>}
                 </div>
               )}
             </section>
@@ -448,6 +453,8 @@ export default function Home() {
             <span className="episode-kicker">MISSION COMPLETE</span>
             <h1>Nice call, crew member.</h1>
             <p>You protected the data, repaired the prompt, and kept a qualified person in control of the final decision.</p>
+            {saveStatus === "saved" && <div className="feedback correct" role="status"><span>✓</span><p><strong>Completion connected</strong>Your result is available in the admin report.</p></div>}
+            {saveStatus === "local" && <div className="feedback coach" role="status"><span>!</span><p><strong>Saved on this device</strong>Connect pilot storage in Vercel to make completion records durable.</p></div>}
             <div className="result-grid">
               <section className="score-card comic-box">
                 <span className="score-ring"><b>{score}</b><small>mastery</small></span>
