@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AdminPortal } from "./AdminPortal";
 import { LearnerProfile, Onboarding } from "./Onboarding";
 
-type View = "dashboard" | "mission" | "results";
+type View = "dashboard" | "story" | "mission" | "results";
 type AppMode = "loading" | "onboarding" | "learner" | "admin";
 
 type Choice = {
@@ -131,6 +131,58 @@ const stageDetails = [
   { eyebrow: "HUMAN CONTROL", reward: "+25 XP", consequence: "A qualified reviewer stays accountable for what leaves the desk." },
 ];
 
+const storyBeats = [
+  {
+    speaker: "JORDAN",
+    role: "AI ENABLEMENT LEAD",
+    line: "Morning, Maya. Why is the delay desk flashing like a holiday display?",
+    direction: "Jordan arrives with coffee. Maya has an incident report open beside a public chatbot.",
+    lesson: "The pressure is realistic: a useful task, a short deadline, and an easy-looking shortcut.",
+    mood: "arrival",
+  },
+  {
+    speaker: "MAYA",
+    role: "OPERATIONS COORDINATOR",
+    line: "Flight 219 was delayed. I need a customer-safe summary before the 10 a.m. briefing—and this report is six pages long.",
+    direction: "Maya points to the report. Names, contact details, and a booking reference are visible.",
+    lesson: "AI may be appropriate for drafting, but the source material changes the risk.",
+    mood: "pressure",
+  },
+  {
+    speaker: "JORDAN",
+    role: "AI ENABLEMENT LEAD",
+    line: "A summary sounds reasonable. Is that chatbot approved for internal incident information?",
+    direction: "The cursor stops above the upload button.",
+    lesson: "Start with tool approval and data classification—not with prompt wording.",
+    mood: "pause",
+  },
+  {
+    speaker: "MAYA",
+    role: "OPERATIONS COORDINATOR",
+    line: "Good catch. I was focused on speed. Help me keep what the summary needs and remove what it doesn’t.",
+    direction: "Maya moves the report away from the upload area and opens the approved workflow guide.",
+    lesson: "Good AI use is not 'use it' or 'ban it.' It is choosing a safe workflow for the task.",
+    mood: "resolve",
+  },
+];
+
+function StoryScene({ beat }: { beat: number }) {
+  const current = storyBeats[beat];
+  return (
+    <section className={`story-stage story-${current.mood}`} aria-labelledby="story-dialogue">
+      <div className="story-slate"><span>CTRL+ALT+LEARN STUDIOS</span><b>EP. 01 · THE DATA SAFETY CHECKPOINT</b><em>SCENE {beat + 1} / {storyBeats.length}</em></div>
+      <div className="story-set" aria-hidden="true">
+        <div className="story-window"><i /><i /><i /></div><div className="story-status"><b>FLIGHT 219</b><span>BRIEFING · 10:00</span><em>18 MIN LEFT</em></div>
+        <div className="story-actor maya"><i /><b /></div><div className="story-actor jordan"><i /><b /></div><div className="story-console"><span>INCIDENT REPORT</span><i /><i /><i /></div>
+      </div>
+      <div className="story-dialogue" id="story-dialogue">
+        <span>{current.speaker} · {current.role}</span><blockquote>“{current.line}”</blockquote><small>STAGE DIRECTION · {current.direction}</small>
+      </div>
+      <aside className="director-note"><span>DIRECTOR’S NOTE</span><p>{current.lesson}</p></aside>
+    </section>
+  );
+}
+
 function OfficeScene({ stage, cleared = false }: { stage: number; cleared?: boolean }) {
   const bubble = [
     "The chatbot could summarize this delay report in seconds. Can I paste the whole incident log?",
@@ -225,6 +277,7 @@ export default function Home() {
   const [mode, setMode] = useState<AppMode>("loading");
   const [profile, setProfile] = useState<LearnerProfile | null>(null);
   const [view, setView] = useState<View>("dashboard");
+  const [storyBeat, setStoryBeat] = useState(0);
   const [stage, setStage] = useState(0);
   const [mistakes, setMistakes] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
@@ -328,6 +381,7 @@ export default function Home() {
     setSelected(null);
     setFeedback(null);
     setRedactions([]);
+    setStoryBeat(0);
   }
 
   function completeOnboarding(nextProfile: LearnerProfile) {
@@ -373,7 +427,7 @@ export default function Home() {
                 <OfficeScene stage={0} />
                 <div className="mission-brief comic-box">
                   <div><span className="caption-label">TODAY’S CALL</span><h2>Can a chatbot see this incident report?</h2><p>Choose a safe tool, remove unnecessary data, build a useful prompt, and verify the result.</p></div>
-                  <button className="primary-button" type="button" onClick={() => setView("mission")}>Start mission <span>→</span></button>
+                  <button className="primary-button" type="button" onClick={() => { setStoryBeat(0); setView("story"); }}>Start episode <span>▶</span></button>
                 </div>
                 <div className="mission-objectives" aria-label="Mission objectives">
                   <article><span>01</span><p><strong>Protect the passenger</strong><small>Spot details that do not belong in a prompt.</small></p></article>
@@ -392,6 +446,21 @@ export default function Home() {
                 <div className="desk-note"><span>DESK NOTE</span><strong>Pause → classify → minimize → verify.</strong><p>The safest prompt starts before you type.</p></div>
                 <div className="certificate-teaser"><span>☆</span><p><strong>Certificate unlocked at the finish</strong><small>Complete the final coached challenge to export your record.</small></p></div>
               </aside>
+            </div>
+          </div>
+        )}
+
+        {view === "story" && (
+          <div className="story-player page-enter">
+            <header className="story-player-header"><div><span className="episode-kicker"><span>COLD OPEN</span><i /> WATCH THE SCENE</span><h1>Before you make the call…</h1><p>Meet the crew, see the pressure they are under, and notice where the AI risk begins.</p></div><button className="text-button" type="button" onClick={() => setView("mission")}>Skip to decision</button></header>
+            <div className="story-timeline" aria-label={`Scene ${storyBeat + 1} of ${storyBeats.length}`}>{storyBeats.map((_, index) => <i className={index <= storyBeat ? "active" : ""} key={index}><span /></i>)}</div>
+            <StoryScene beat={storyBeat} />
+            <div className="story-controls">
+              <button className="back-button" disabled={storyBeat === 0} type="button" onClick={() => setStoryBeat((value) => Math.max(0, value - 1))}>← Previous line</button>
+              <span><kbd>Tip</kbd> Read it like a scene. The details become your evidence.</span>
+              {storyBeat < storyBeats.length - 1
+                ? <button className="primary-button compact" type="button" onClick={() => setStoryBeat((value) => value + 1)}>Continue scene <span>→</span></button>
+                : <button className="primary-button compact" type="button" onClick={() => setView("mission")}>Make the call <span>→</span></button>}
             </div>
           </div>
         )}

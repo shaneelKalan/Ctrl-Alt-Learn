@@ -24,6 +24,9 @@ test("ships guided learner onboarding", async () => {
   assert.match(page, /CREW XP/);
   assert.match(page, /What changed\?/);
   assert.match(page, /Data Shield/);
+  assert.match(page, /Before you make the call/);
+  assert.match(page, /DIRECTOR’S NOTE/);
+  assert.match(page, /Make the call/);
 });
 
 test("protects admin routes with an HTTP-only session cookie", async () => {
