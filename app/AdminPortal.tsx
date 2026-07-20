@@ -1,6 +1,7 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
+import { course, courseMinutes } from "./course";
 
 type AdminTab = "overview" | "people" | "assignments" | "courses" | "reports" | "settings";
 
@@ -219,7 +220,7 @@ function Overview({ data, assignedCount, completionRate, averageScore, setTab }:
       <section className="admin-panel"><div className="admin-panel-title"><div><span>RECENT ACTIVITY</span><h2>Assignments</h2></div><button onClick={() => setTab("assignments")} type="button">View all →</button></div>
         {recent.length ? <div className="activity-list">{recent.map((item) => <div key={item.id}><span className={`status-dot ${item.status}`} /><p><strong>{item.learnerName}</strong><small>AI Chatbots: Intro 101 · {item.status}</small></p><time>{item.dueDate ? `Due ${item.dueDate}` : "No due date"}</time></div>)}</div> : <EmptyState title="No assignments yet" copy="Add a learner and assign Intro 101 to start the pilot." />}
       </section>
-      <section className="admin-panel course-health"><div className="admin-panel-title"><div><span>COURSE HEALTH</span><h2>Intro 101 pilot</h2></div><b className="published">PUBLISHED</b></div><div className="course-mini-scene" aria-hidden="true"><i /><i /><span>AI?</span></div><ul><li><span>1</span> playable mission</li><li><span>6m</span> pilot duration</li><li><span>{data.settings.passingScore || "80"}%</span> passing score</li></ul><button className="secondary-button" type="button" onClick={() => setTab("courses")}>Manage course</button></section>
+      <section className="admin-panel course-health"><div className="admin-panel-title"><div><span>COURSE HEALTH</span><h2>Intro 101 pilot</h2></div><b className="published">PUBLISHED</b></div><div className="course-mini-scene" aria-hidden="true"><i /><i /><span>AI?</span></div><ul><li><span>{course.length}</span> playable missions</li><li><span>{courseMinutes}m</span> course duration</li><li><span>{data.settings.passingScore || "80"}%</span> passing score</li></ul><button className="secondary-button" type="button" onClick={() => setTab("courses")}>Manage course</button></section>
     </div>
   </>;
 }
@@ -252,8 +253,8 @@ function Courses({ data, action }: { data: AdminData; action: (payload: Record<s
   const published = data.settings.coursePublished !== "false";
   return <>
     <PageHeading eyebrow="COURSES" title="Shape the learning experience" copy="Control availability and review the Intro 101 mission plan." />
-    <section className="course-admin-card comic-box"><div className="course-admin-cover"><span>COURSE 01</span><strong>AI Chatbots:<br />Intro 101</strong><small>AVIATION OPERATIONS EDITION</small></div><div className="course-admin-body"><div><span className="status-pill published">{published ? "Pilot published" : "Draft"}</span><h2>Human-first AI foundations</h2><p>The data-safety pilot is playable now. Seven additional short missions are outlined for the complete 29-minute course.</p></div><div className="course-admin-stats"><span><b>1 live</b> mission</span><span><b>6</b> minutes</span><span><b>{data.settings.passingScore || "80"}%</b> pass</span></div><button className="secondary-button" type="button" onClick={() => void action({ action: "saveSettings", settings: { coursePublished: String(!published) } }, published ? "Course moved to draft." : "Course published.")}>{published ? "Move to draft" : "Publish course"}</button></div></section>
-    <div className="module-grid">{["Meet Your AI Teammate", "What AI Does Well", "Spot the Confident Guess", "The Data Safety Checkpoint", "Prompt Repair Shop", "Verify Before You Fly", "Human in the Loop", "Final Shift Challenge"].map((title, index) => <article key={title}><span>{String(index + 1).padStart(2, "0")}</span><div><strong>{title}</strong><small>{index === 3 ? "Playable prototype" : "Curriculum outlined"}</small></div><b>{index === 3 ? "LIVE" : "PLANNED"}</b></article>)}</div>
+    <section className="course-admin-card comic-box"><div className="course-admin-cover"><span>COURSE 01</span><strong>AI Chatbots:<br />Intro 101</strong><small>AVIATION OPERATIONS EDITION</small></div><div className="course-admin-body"><div><span className="status-pill published">{published ? "Published" : "Draft"}</span><h2>Human-first AI foundations</h2><p>All {course.length} interactive missions are live: foundations, strengths and limits, data safety, work and life use, prompting, verification, and a capstone shift challenge.</p></div><div className="course-admin-stats"><span><b>{course.length} live</b> missions</span><span><b>{courseMinutes}</b> minutes</span><span><b>{data.settings.passingScore || "80"}%</b> pass</span></div><button className="secondary-button" type="button" onClick={() => void action({ action: "saveSettings", settings: { coursePublished: String(!published) } }, published ? "Course moved to draft." : "Course published.")}>{published ? "Move to draft" : "Publish course"}</button></div></section>
+    <div className="module-grid">{course.map((mission) => <article key={mission.id}><span>{String(mission.number).padStart(2, "0")}</span><div><strong>{mission.title}</strong><small>{mission.minutes} min · {mission.steps.length} scenes · {mission.kicker.toLowerCase()}</small></div><b>LIVE</b></article>)}</div>
   </>;
 }
 

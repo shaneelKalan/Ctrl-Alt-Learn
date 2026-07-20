@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
-import { getDb } from "../../../db";
-import { assignments, completions, learners } from "../../../db/schema";
+import { hasDurableStore, readStore, writeStore } from "../../../db";
+
+export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   const payload = (await request.json()) as {
@@ -18,32 +18,34 @@ export async function POST(request: Request) {
     return Response.json({ error: "Learner, email, and certificate are required" }, { status: 400 });
   }
 
-  const db = getDb();
-  let [learner] = await db.select().from(learners).where(eq(learners.email, email)).limit(1);
+  const store = await readStore();
+  let learner = store.learners.find((item) => item.email === email);
   if (!learner) {
-    const id = crypto.randomUUID();
-    await db.insert(learners).values({
-      id,
+    learner = {
+      id: crypto.randomUUID(),
       name,
       email,
       department: payload.department ?? "General",
       skillLevel: payload.skillLevel ?? "Beginner",
-      createdAt: new Date(),
-    });
-    [learner] = await db.select().from(learners).where(eq(learners.id, id)).limit(1);
+      status: "active",
+      createdAt: new Date().toISOString(),
+    };
+    store.learners.push(learner);
   }
 
-  const existing = await db.select().from(completions).where(eq(completions.certificateId, certificateId)).limit(1);
-  if (!existing.length) {
-    await db.insert(completions).values({
+  if (!store.completions.some((item) => item.certificateId === certificateId)) {
+    store.completions.push({
       id: crypto.randomUUID(),
       learnerId: learner.id,
       courseId: "intro-101",
       score: Math.max(0, Math.min(100, Number(payload.score ?? 0))),
       certificateId,
-      completedAt: new Date(),
+      completedAt: new Date().toISOString(),
     });
   }
-  await db.update(assignments).set({ status: "completed" }).where(eq(assignments.learnerId, learner.id));
-  return Response.json({ recorded: true });
+  for (const assignment of store.assignments) {
+    if (assignment.learnerId === learner.id) assignment.status = "completed";
+  }
+  await writeStore(store);
+  return Response.json({ recorded: true, durable: hasDurableStore() });
 }
