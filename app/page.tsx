@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AdminPortal } from "./AdminPortal";
+import { CoachGuide } from "./CoachGuide";
 import { LearnerProfile, Onboarding } from "./Onboarding";
 import { courseMinutes, missionScore, type Dimension, type Mission } from "./course";
 import { badges as badgeDefs, evaluateBadges, missionXp, nextRank, rankForXp, updateStreak, type StreakState } from "./game";
@@ -10,7 +11,7 @@ import { DimensionStats, emptyDimensionStats, MissionPlayer } from "./MissionPla
 import { PracticeBotLab } from "./PracticeBotLab";
 import { VideoPlayer } from "./VideoPlayer";
 
-type View = "dashboard" | "mission" | "debrief" | "results" | "guide" | "video" | "lab";
+type View = "dashboard" | "mission" | "debrief" | "results" | "guide" | "video" | "lab" | "coach";
 type AppMode = "loading" | "onboarding" | "learner" | "admin";
 
 type MissionRecord = { score: number; mistakes: number; completedAt: string };
@@ -135,10 +136,12 @@ function MissionRail({
   guideActive,
   videoActive,
   labActive,
+  coachActive,
   onSelect,
   onGuide,
   onVideos,
   onLab,
+  onCoach,
 }: {
   course: Mission[];
   lang: Lang;
@@ -147,10 +150,12 @@ function MissionRail({
   guideActive: boolean;
   videoActive: boolean;
   labActive: boolean;
+  coachActive: boolean;
   onSelect: (mission: Mission) => void;
   onGuide: () => void;
   onVideos: () => void;
   onLab: () => void;
+  onCoach: () => void;
 }) {
   const t = uiStrings[lang].rail;
   const completedCount = Object.keys(progress.missions).filter((id) => course.some((m) => m.id === id)).length;
@@ -193,6 +198,10 @@ function MissionRail({
       <button className={`mission-link guide-link ${guideActive ? "active" : ""}`} type="button" onClick={onGuide}>
         <span>📒</span>
         <p>{t.fieldGuide}<small>{t.fieldGuideTag}</small></p>
+      </button>
+      <button className={`mission-link guide-link ${coachActive ? "active" : ""}`} type="button" onClick={onCoach}>
+        <span>🧭</span>
+        <p>{lang === "es" ? "Guía de equipo" : "Team Coach Guide"}<small>{lang === "es" ? "Reuniones · roles · rúbrica" : "Huddles · roles · rubric"}</small></p>
       </button>
       <div className="rail-progress">
         <span><b>{t.progress}</b><b>{completedCount}/{course.length}</b></span>
@@ -523,10 +532,12 @@ export default function Home() {
         progress={progress}
         videoActive={view === "video"}
         labActive={view === "lab"}
+        coachActive={view === "coach"}
         onSelect={(mission) => startMission(mission)}
         onGuide={() => setView("guide")}
         onVideos={() => { setActiveVideoId(null); setView("video"); }}
         onLab={() => setView("lab")}
+        onCoach={() => setView("coach")}
       />
       <section className="workspace">
         <header className="topbar">
@@ -647,6 +658,8 @@ export default function Home() {
         )}
 
         {view === "lab" && <PracticeBotLab lang={lang} onExit={() => setView("dashboard")} />}
+
+        {view === "coach" && <CoachGuide lang={lang} onExit={() => setView("dashboard")} />}
 
         {view === "guide" && (
           <div className="guide page-enter">

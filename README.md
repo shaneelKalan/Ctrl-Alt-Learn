@@ -21,8 +21,8 @@ Teaching-first and ADHD-friendly by design: tap-through lesson beats (one idea
 per screen), quick knowledge checks between them, four hands-on activity types
 (scenario choices, redaction boards, classification lanes, and a guided prompt
 builder), sequential unlocks, a mastery radar across four scoring dimensions,
-per-mission debriefs, an always-available Field Guide of cheat sheets, and a
-printable completion certificate.
+per-mission debriefs, an always-available Field Guide of cheat sheets, a
+team coach guide for huddles and role-play, and a printable completion certificate.
 
 ## Quick start
 
@@ -55,6 +55,7 @@ screened before the server calls OpenAI.
 - `app/course.ts` — the full course content model (missions, steps, coaching copy)
 - `app/MissionPlayer.tsx` — generic player for all activity types
 - `app/PracticeBotLab.tsx` — safe live/simulated AI practice lab
+- `app/CoachGuide.tsx` — facilitator guide for team huddles, role-play scenes, and manager rubrics
 - `app/api/practice-bot/route.ts` — guarded OpenAI Responses API proxy with simulator fallback
 - `app/page.tsx` — learner dashboard, course map, debriefs, results, certificate
 - `app/AdminPortal.tsx` — admin control room (people, assignments, courses, reports, settings)

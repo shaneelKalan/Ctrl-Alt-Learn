@@ -133,11 +133,12 @@ test("ships the gamification layer in both languages", async () => {
 });
 
 test("ships the full eight-mission course", async () => {
-  const [course, player, page, lab] = await Promise.all([
+  const [course, player, page, lab, coach] = await Promise.all([
     source("app/course.ts"),
     source("app/MissionPlayer.tsx"),
     source("app/page.tsx"),
     source("app/PracticeBotLab.tsx"),
+    source("app/CoachGuide.tsx"),
   ]);
 
   const missionIds = ["meet-ai", "superpowers-limits", "data-safety", "work-mode", "life-mode", "prompt-repair", "trust-verify", "final-shift"];
@@ -147,8 +148,13 @@ test("ships the full eight-mission course", async () => {
   assert.match(page, /cal-course-progress-v2/);
   assert.match(page, /MissionPlayer/);
   assert.match(page, /PracticeBotLab/);
+  assert.match(page, /CoachGuide/);
+  assert.match(page, /Team Coach Guide/);
   assert.match(lab, /LIVE AI LAB/);
   assert.match(lab, /fetch\("\/api\/practice-bot"/);
+  assert.match(coach, /TEAM ENABLEMENT/);
+  assert.match(coach, /DASI role-play scenes/);
+  assert.match(coach, /Manager observation rubric/);
 });
 
 test("adds a guarded live AI practice bot route", async () => {
