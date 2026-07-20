@@ -163,8 +163,9 @@ function AcademyBriefing({ step, answer, onAnswer }: { step: number; answer: str
   </section>;
 }
 
-type BotMessage = { role: "bot" | "user"; text: string; kind?: "safe" | "coach" | "blocked" };
-const starterBotMessage: BotMessage = { role: "bot", text: "I’m the simulated DASI Practice Bot. Give me a fictional, low-risk task and tell me the format you want. I’ll show you how the prompt changes the result." };
+type BotMode = "unknown" | "live" | "simulated";
+type BotMessage = { role: "bot" | "user"; text: string; kind?: "safe" | "coach" | "blocked" | "pending"; mode?: BotMode };
+const starterBotMessage: BotMessage = { role: "bot", mode: "unknown", text: "I’m the DASI Practice Bot. Give me a fictional, low-risk task and tell me the format you want. If the live AI lab is configured, I’ll coach you with a real model; otherwise I’ll use simulator mode." };
 
 function inspectPracticePrompt(prompt: string) {
   const normalized = prompt.toLowerCase();
@@ -331,6 +332,8 @@ export default function Home() {
   const [botInput, setBotInput] = useState("");
   const [botMessages, setBotMessages] = useState<BotMessage[]>([starterBotMessage]);
   const [labCleared, setLabCleared] = useState(false);
+  const [botBusy, setBotBusy] = useState(false);
+  const [botMode, setBotMode] = useState<BotMode>("unknown");
   const [promptChecks, setPromptChecks] = useState({ hasGoal: false, hasFormat: false, hasCheck: false });
   const [stage, setStage] = useState(0);
   const [mistakes, setMistakes] = useState(0);
@@ -395,14 +398,30 @@ export default function Home() {
     }
   }
 
-  function sendPracticePrompt() {
+  async function sendPracticePrompt() {
     const prompt = botInput.trim();
-    if (!prompt) return;
-    const result = inspectPracticePrompt(prompt);
-    setBotMessages((messages) => [...messages, { role: "user", text: prompt }, { role: "bot", text: result.text, kind: result.kind }]);
-    setPromptChecks(result.checks);
-    if (result.kind === "safe") setLabCleared(true);
+    if (!prompt || botBusy) return;
+    setBotBusy(true);
     setBotInput("");
+    setBotMessages((messages) => [...messages, { role: "user", text: prompt }, { role: "bot", text: "Thinking through the safety gates…", kind: "pending", mode: botMode }]);
+    try {
+      const response = await fetch("/api/practice-bot", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ prompt }) });
+      const result = (await response.json()) as { kind?: "safe" | "coach" | "blocked"; mode?: BotMode; text?: string; checks?: { hasGoal: boolean; hasFormat: boolean; hasCheck: boolean }; error?: string };
+      const fallback = !response.ok || !result.text ? { ...inspectPracticePrompt(prompt), mode: "simulated" as BotMode } : null;
+      const reply = fallback ?? { kind: result.kind ?? "coach", mode: result.mode ?? "simulated", text: result.text ?? "The practice bot did not return a response.", checks: result.checks ?? inspectPracticePrompt(prompt).checks };
+      setBotMode(reply.mode);
+      setPromptChecks(reply.checks);
+      if (reply.kind === "safe") setLabCleared(true);
+      setBotMessages((messages) => [...messages.slice(0, -1), { role: "bot", text: response.ok ? reply.text : result.error ?? reply.text, kind: reply.kind, mode: reply.mode }]);
+    } catch {
+      const result = inspectPracticePrompt(prompt);
+      setBotMode("simulated");
+      setPromptChecks(result.checks);
+      if (result.kind === "safe") setLabCleared(true);
+      setBotMessages((messages) => [...messages.slice(0, -1), { role: "bot", text: "Network hiccup—using simulator mode.\n\n" + result.text, kind: result.kind, mode: "simulated" }]);
+    } finally {
+      setBotBusy(false);
+    }
   }
 
   async function nextStage() {
@@ -461,6 +480,8 @@ export default function Home() {
     setBotInput("");
     setBotMessages([starterBotMessage]);
     setLabCleared(false);
+    setBotBusy(false);
+    setBotMode("unknown");
     setPromptChecks({ hasGoal: false, hasFormat: false, hasCheck: false });
   }
 
@@ -543,15 +564,15 @@ export default function Home() {
 
         {view === "lab" && (
           <div className="bot-lab page-enter">
-            <header className="bot-lab-header"><div><span className="episode-kicker"><span>SIMULATION LAB</span><i /> SAFE PRACTICE</span><h1>Try prompting the bot.</h1><p>This is a rule-based training simulation—not a live AI model. Use fictional information only.</p></div><button className="text-button" type="button" onClick={() => { setStoryBeat(0); setView("story"); }}>Skip practice</button></header>
+            <header className="bot-lab-header"><div><span className="episode-kicker"><span>LIVE AI LAB</span><i /> SAFE PRACTICE</span><h1>Try the training bot.</h1><p>When configured with an OpenAI API key, this is a live AI coach. If not, it automatically falls back to simulator mode. Use fictional information only.</p></div><button className="text-button" type="button" onClick={() => { setStoryBeat(0); setView("story"); }}>Skip practice</button></header>
             <div className="bot-lab-grid">
               <section className="practice-chat comic-box" aria-label="DASI Practice Bot conversation">
-                <div className="practice-chat-title"><span><i /> DASI PRACTICE BOT</span><b>SIMULATED</b></div>
-                <div className="practice-messages" aria-live="polite">{botMessages.map((message, index) => <div className={`practice-message ${message.role} ${message.kind ?? ""}`} key={`${message.role}-${index}`}><span>{message.role === "bot" ? "BOT" : "YOU"}</span><p>{message.text}</p></div>)}</div>
+                <div className="practice-chat-title"><span><i /> DASI PRACTICE BOT</span><b className={botMode === "live" ? "live" : ""}>{botMode === "live" ? "LIVE AI" : botMode === "simulated" ? "SIMULATOR" : "READY"}</b></div>
+                <div className="practice-messages" aria-live="polite">{botMessages.map((message, index) => <div className={`practice-message ${message.role} ${message.kind ?? ""}`} key={`${message.role}-${index}`}><span>{message.role === "bot" ? (message.mode === "live" ? "LIVE BOT" : "BOT") : "YOU"}</span><p>{message.text}</p></div>)}</div>
                 <div className="practice-suggestions"><span>TRY A STARTER</span>{["Help me with an RFQ", "Draft three bullets from fictional part and logistics facts. Flag missing information and do not invent details.", "Summarize Northstar RFQ DASI-84729 and supplier pricing"].map((prompt) => <button key={prompt} onClick={() => setBotInput(prompt)} type="button">{prompt}</button>)}</div>
-                <form className="practice-composer" onSubmit={(event) => { event.preventDefault(); sendPracticePrompt(); }}><label htmlFor="practice-prompt">Your fictional practice prompt</label><textarea id="practice-prompt" onChange={(event) => setBotInput(event.target.value)} placeholder="Draft three bullets using only these fictional facts…" rows={4} value={botInput} /><div><small>Never enter real customer, supplier, pricing, trace, personal, or controlled data.</small><button className="primary-button compact" disabled={!botInput.trim()} type="submit">Send prompt <span>↑</span></button></div></form>
+                <form className="practice-composer" onSubmit={(event) => { event.preventDefault(); void sendPracticePrompt(); }}><label htmlFor="practice-prompt">Your fictional practice prompt</label><textarea id="practice-prompt" onChange={(event) => setBotInput(event.target.value)} placeholder="Draft three bullets using only these fictional facts…" rows={4} value={botInput} /><div><small>Never enter real customer, supplier, pricing, trace, personal, or controlled data.</small><button className="primary-button compact" disabled={!botInput.trim() || botBusy} type="submit">{botBusy ? "Coaching…" : "Send prompt"} <span>↑</span></button></div></form>
               </section>
-              <aside className="prompt-coach comic-box"><span>PROMPT COACH</span><h2>Build a reviewable request</h2><div className={promptChecks.hasGoal ? "done" : ""}><i>{promptChecks.hasGoal ? "✓" : "1"}</i><p><b>Clear goal</b><small>Say what the bot should do.</small></p></div><div className={promptChecks.hasFormat ? "done" : ""}><i>{promptChecks.hasFormat ? "✓" : "2"}</i><p><b>Useful format</b><small>Bullets, table, email, or another structure.</small></p></div><div className={promptChecks.hasCheck ? "done" : ""}><i>{promptChecks.hasCheck ? "✓" : "3"}</i><p><b>Uncertainty rule</b><small>Flag gaps; never invent missing facts.</small></p></div><section><b>Practice boundary</b><p>The simulator recognizes a few patterns and returns coached examples. It does not send your prompt to an AI provider.</p></section>{labCleared && <button className="primary-button" type="button" onClick={() => { setStoryBeat(0); setView("story"); }}>Practice cleared — watch scene <span>▶</span></button>}</aside>
+              <aside className="prompt-coach comic-box"><span>PROMPT COACH</span><h2>Build a reviewable request</h2><div className={promptChecks.hasGoal ? "done" : ""}><i>{promptChecks.hasGoal ? "✓" : "1"}</i><p><b>Clear goal</b><small>Say what the bot should do.</small></p></div><div className={promptChecks.hasFormat ? "done" : ""}><i>{promptChecks.hasFormat ? "✓" : "2"}</i><p><b>Useful format</b><small>Bullets, table, email, or another structure.</small></p></div><div className={promptChecks.hasCheck ? "done" : ""}><i>{promptChecks.hasCheck ? "✓" : "3"}</i><p><b>Uncertainty rule</b><small>Flag gaps; never invent missing facts.</small></p></div><section><b>Practice boundary</b><p>The app screens sensitive-looking text before any live call. If OPENAI_API_KEY is missing or the live coach is unavailable, simulator mode keeps the training moving.</p></section>{labCleared && <button className="primary-button" type="button" onClick={() => { setStoryBeat(0); setView("story"); }}>Practice cleared — watch scene <span>▶</span></button>}</aside>
             </div>
           </div>
         )}

@@ -40,7 +40,8 @@ test("ships guided learner onboarding", async () => {
   assert.match(page, /These are episode results/);
   assert.match(page, /stageMistakes/);
   assert.match(page, /DASI PRACTICE BOT/);
-  assert.match(page, /rule-based training simulation/);
+  assert.match(page, /LIVE AI LAB/);
+  assert.match(page, /fetch\("\/api\/practice-bot"/);
   assert.match(page, /Data gate triggered/);
   assert.match(page, /Practice cleared/);
 });
@@ -81,4 +82,19 @@ test("includes Vercel-compatible durable pilot storage", async () => {
   assert.match(store, /UPSTASH_REDIS_REST_URL/);
   assert.match(completion, /writeStore/);
   assert.match(readme, /Deploy a test environment to Vercel/);
+});
+
+test("adds a guarded live AI practice bot route", async () => {
+  const [route, readme, env] = await Promise.all([
+    source("app/api/practice-bot/route.ts"),
+    source("README.md"),
+    source(".env.example"),
+  ]);
+
+  assert.match(route, /OPENAI_API_KEY/);
+  assert.match(route, /https:\/\/api.openai.com\/v1\/responses/);
+  assert.match(route, /sensitivePattern/);
+  assert.match(route, /mode: "simulated"/);
+  assert.match(readme, /live AI practice bot/);
+  assert.match(env, /OPENAI_MODEL/);
 });

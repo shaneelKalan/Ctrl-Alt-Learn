@@ -1,6 +1,6 @@
 # Ctrl+Alt+Learn
 
-An interactive, workplace-sitcom-style AI literacy pilot for DASI. The current vertical slice includes onboarding, an eight-card AI preflight with knowledge checks, a safe simulated practice bot, an acted aviation-parts sourcing scenario, interactive decisions, printable certificates, and an administrator control room.
+An interactive, workplace-sitcom-style AI literacy pilot for DASI. The current vertical slice includes onboarding, an eight-card AI preflight with knowledge checks, a safe practice bot that can run live with OpenAI or fall back to simulator mode, an acted aviation-parts sourcing scenario, interactive decisions, printable certificates, and an administrator control room.
 
 ## Run locally
 
@@ -22,8 +22,9 @@ Without a Redis connection the app uses process-local preview storage. That is u
 2. Add `ADMIN_PASSWORD` and `AUTH_SECRET` to the Vercel project's environment variables. Use separate long, random values.
 3. In the Vercel Marketplace, connect an Upstash Redis integration to the project.
 4. Confirm the integration provides `KV_REST_API_URL` and `KV_REST_API_TOKEN`. The commonly provided `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` names also work.
-5. Redeploy after adding the variables.
-6. Complete the learner mission, then open **Admin → Reports** and confirm the completion appears.
+5. Optional: add `OPENAI_API_KEY` and `OPENAI_MODEL` to enable the live AI practice bot. Without an API key, the bot remains in safe simulator mode.
+6. Redeploy after adding the variables.
+7. Complete the learner mission, then open **Admin → Reports** and confirm the completion appears.
 
 The admin dashboard displays a warning when durable storage is not connected. Do not use real employee-sensitive information in this prototype; shared-password access and the completion endpoint are intended only for controlled usability testing.
 
@@ -35,8 +36,10 @@ The admin dashboard displays a warning when durable storage is not connected. Do
 | `AUTH_SECRET` | Yes on Vercel | Signs the admin session token. |
 | `KV_REST_API_URL` | For durable data | Upstash Redis REST endpoint. |
 | `KV_REST_API_TOKEN` | For durable data | Upstash Redis REST token. |
+| `OPENAI_API_KEY` | Optional | Enables the live AI practice bot. If omitted, simulator mode is used. |
+| `OPENAI_MODEL` | Optional | Model used by the live practice bot. Defaults to `gpt-4.1-mini`. |
 
-The equivalent `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` variables are supported as fallbacks.
+The equivalent `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` variables are supported as fallbacks. The live practice bot route screens sensitive-looking text before any OpenAI call and is still intended for fictional training prompts only.
 
 ## Commands
 
