@@ -1,5 +1,7 @@
 import { course as courseEn, fieldGuide as fieldGuideEn, type Dimension, type GuideCard, type Mission } from "./course";
 import { courseEs, fieldGuideEs } from "./course.es";
+import { videoLibrary as videoLibraryEn, type VideoLesson } from "./videos";
+import { videoLibraryEs } from "./videos.es";
 
 export type Lang = "en" | "es";
 
@@ -9,6 +11,10 @@ export function getCourse(lang: Lang): Mission[] {
 
 export function getFieldGuide(lang: Lang): GuideCard[] {
   return lang === "es" ? fieldGuideEs : fieldGuideEn;
+}
+
+export function getVideos(lang: Lang): VideoLesson[] {
+  return lang === "es" ? videoLibraryEs : videoLibraryEn;
 }
 
 const en = {
@@ -91,9 +97,39 @@ const en = {
     locked: "Locked",
     fieldGuide: "Field Guide",
     fieldGuideTag: "Cheat sheets · always open",
+    videoLibrary: "Video Library",
+    videoTag: "Watch with voiceover",
     progress: "Course progress",
     progressDone: "Course complete — certificate unlocked",
     progressNote: "minutes of playable training",
+  },
+  videos: {
+    libraryKicker: "VIDEO LIBRARY",
+    libraryTitle: "Watch, then play.",
+    libraryCopy: "Short animated explainers with voiceover and captions. Watch one, then jump into the matching mission.",
+    watch: "Watch now",
+    episode: "EPISODE",
+    nowPlaying: "NOW PLAYING",
+    play: "Play",
+    pause: "Pause",
+    prev: "Back",
+    next: "Skip",
+    replay: "Replay",
+    soundOn: "Sound on",
+    soundOff: "Sound off",
+    captionsOn: "CAPTIONS ON",
+    sceneOf: "Scene {i} of {n}",
+    bigPlay: "Play video",
+    tapToStart: "Animated · voiceover · captions",
+    exit: "← Video library",
+    finishedTitle: "That's the intro.",
+    finishedCopy: "You've got the big picture. Ready to put it into practice?",
+    startMission: "Start the mission",
+    replayVideo: "Replay video",
+    spotlightKicker: "NEW · WATCH FIRST",
+    spotlightTitle: "Intro to AI",
+    spotlightCopy: "A 7-minute animated explainer with voiceover. The perfect warm-up before Mission 1.",
+    spotlightCta: "Watch the video",
   },
   topbar: {
     edition: "AVIATION OPERATIONS EDITION",
@@ -330,9 +366,39 @@ const es: typeof en = {
     locked: "Bloqueada",
     fieldGuide: "Guía de bolsillo",
     fieldGuideTag: "Chuletas · siempre abierta",
+    videoLibrary: "Videoteca",
+    videoTag: "Míralo con narración",
     progress: "Progreso del curso",
     progressDone: "Curso completo — certificado desbloqueado",
     progressNote: "minutos de formación jugable",
+  },
+  videos: {
+    libraryKicker: "VIDEOTECA",
+    libraryTitle: "Míralo, luego juega.",
+    libraryCopy: "Explicaciones animadas cortas con narración y subtítulos. Mira una y luego entra a la misión correspondiente.",
+    watch: "Ver ahora",
+    episode: "EPISODIO",
+    nowPlaying: "REPRODUCIENDO",
+    play: "Reproducir",
+    pause: "Pausa",
+    prev: "Atrás",
+    next: "Saltar",
+    replay: "Repetir",
+    soundOn: "Con sonido",
+    soundOff: "Sin sonido",
+    captionsOn: "SUBTÍTULOS ACTIVOS",
+    sceneOf: "Escena {i} de {n}",
+    bigPlay: "Reproducir video",
+    tapToStart: "Animado · narración · subtítulos",
+    exit: "← Videoteca",
+    finishedTitle: "Eso es la introducción.",
+    finishedCopy: "Ya tienes el panorama completo. ¿Listo para ponerlo en práctica?",
+    startMission: "Empezar la misión",
+    replayVideo: "Repetir video",
+    spotlightKicker: "NUEVO · MÍRALO PRIMERO",
+    spotlightTitle: "Introducción a la IA",
+    spotlightCopy: "Una explicación animada de 7 minutos con narración. El calentamiento perfecto antes de la Misión 1.",
+    spotlightCta: "Ver el video",
   },
   topbar: {
     edition: "EDICIÓN OPERACIONES DE AVIACIÓN",

@@ -25,6 +25,30 @@ test("ships guided learner onboarding", async () => {
   assert.match(onboarding, /language: lang/);
 });
 
+test("ships the narrated intro video in both languages", async () => {
+  const [videosEn, videosEs, player, page] = await Promise.all([
+    source("app/videos.ts"),
+    source("app/videos.es.ts"),
+    source("app/VideoPlayer.tsx"),
+    source("app/page.tsx"),
+  ]);
+
+  assert.match(videosEn, /id: "intro-to-ai"/);
+  assert.match(videosEs, /id: "intro-to-ai"/);
+
+  // Both language tracks must share the same scene ids in the same order.
+  const sceneIds = (src) => [...src.matchAll(/id: "([\w-]+)",\s*\n\s*visual:/g)].map((m) => m[1]);
+  const en = sceneIds(videosEn);
+  assert.ok(en.length >= 12, `expected >= 12 scenes, got ${en.length}`);
+  assert.deepEqual(sceneIds(videosEs), en);
+
+  // Player must speak narration and degrade gracefully without voices.
+  assert.match(player, /SpeechSynthesisUtterance/);
+  assert.match(player, /voiceschanged/);
+  assert.match(player, /setTimeout/); // timer fallback when speech is unavailable
+  assert.match(page, /VideoPlayer/);
+});
+
 test("offers English and Spanish end to end", async () => {
   const [i18n, courseEn, courseEs] = await Promise.all([
     source("app/i18n.ts"),

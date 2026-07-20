@@ -5,10 +5,11 @@ import { AdminPortal } from "./AdminPortal";
 import { LearnerProfile, Onboarding } from "./Onboarding";
 import { courseMinutes, missionScore, type Dimension, type Mission } from "./course";
 import { badges as badgeDefs, evaluateBadges, missionXp, nextRank, rankForXp, updateStreak, type StreakState } from "./game";
-import { fmt, getCourse, getFieldGuide, uiStrings, type Lang } from "./i18n";
+import { fmt, getCourse, getFieldGuide, getVideos, uiStrings, type Lang } from "./i18n";
 import { DimensionStats, emptyDimensionStats, MissionPlayer } from "./MissionPlayer";
+import { VideoPlayer } from "./VideoPlayer";
 
-type View = "dashboard" | "mission" | "debrief" | "results" | "guide";
+type View = "dashboard" | "mission" | "debrief" | "results" | "guide" | "video";
 type AppMode = "loading" | "onboarding" | "learner" | "admin";
 
 type MissionRecord = { score: number; mistakes: number; completedAt: string };
@@ -129,16 +130,20 @@ function MissionRail({
   progress,
   activeId,
   guideActive,
+  videoActive,
   onSelect,
   onGuide,
+  onVideos,
 }: {
   course: Mission[];
   lang: Lang;
   progress: CourseProgress;
   activeId: string | null;
   guideActive: boolean;
+  videoActive: boolean;
   onSelect: (mission: Mission) => void;
   onGuide: () => void;
+  onVideos: () => void;
 }) {
   const t = uiStrings[lang].rail;
   const completedCount = Object.keys(progress.missions).filter((id) => course.some((m) => m.id === id)).length;
@@ -170,6 +175,10 @@ function MissionRail({
           );
         })}
       </nav>
+      <button className={`mission-link guide-link ${videoActive ? "active" : ""}`} type="button" onClick={onVideos}>
+        <span>🎬</span>
+        <p>{uiStrings[lang].rail.videoLibrary}<small>{uiStrings[lang].rail.videoTag}</small></p>
+      </button>
       <button className={`mission-link guide-link ${guideActive ? "active" : ""}`} type="button" onClick={onGuide}>
         <span>📒</span>
         <p>{t.fieldGuide}<small>{t.fieldGuideTag}</small></p>
@@ -348,6 +357,7 @@ export default function Home() {
   const [view, setView] = useState<View>("dashboard");
   const [progress, setProgress] = useState<CourseProgress>(freshProgress);
   const [activeMissionId, setActiveMissionId] = useState<string | null>(null);
+  const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
   const [lastResult, setLastResult] = useState<DebriefResult | null>(null);
   const [learnerName, setLearnerName] = useState("");
 
@@ -373,6 +383,8 @@ export default function Home() {
   const t = uiStrings[lang];
   const course = useMemo(() => getCourse(lang), [lang]);
   const fieldGuide = useMemo(() => getFieldGuide(lang), [lang]);
+  const videos = useMemo(() => getVideos(lang), [lang]);
+  const activeVideo = activeVideoId ? videos.find((item) => item.id === activeVideoId) ?? null : null;
 
   const upNext = useMemo(() => nextMission(course, progress), [course, progress]);
   const courseComplete = !upNext;
@@ -496,8 +508,10 @@ export default function Home() {
         guideActive={view === "guide"}
         lang={lang}
         progress={progress}
+        videoActive={view === "video"}
         onSelect={(mission) => startMission(mission)}
         onGuide={() => setView("guide")}
+        onVideos={() => { setActiveVideoId(null); setView("video"); }}
       />
       <section className="workspace">
         <header className="topbar">
@@ -527,6 +541,17 @@ export default function Home() {
 
         {view === "dashboard" && (
           <div className="dashboard page-enter">
+            {videos[0] && (
+              <button className="video-spotlight" type="button" onClick={() => { setActiveVideoId(videos[0].id); setView("video"); }}>
+                <span className="video-spotlight-thumb" aria-hidden="true"><i className="vsp-play">▶</i><i className="vsp-wave" /></span>
+                <span className="video-spotlight-copy">
+                  <b>{t.videos.spotlightKicker}</b>
+                  <strong>{t.videos.spotlightTitle}</strong>
+                  <small>{t.videos.spotlightCopy}</small>
+                </span>
+                <span className="video-spotlight-cta">{t.videos.spotlightCta} →</span>
+              </button>
+            )}
             <div className="episode-kicker"><span>{courseComplete ? t.dashboard.courseComplete : `${t.dashboard.mission} ${String(spotlight.number).padStart(2, "0")}`}</span><i /> {spotlight.kicker}</div>
             <div className="dashboard-heading">
               <div>
@@ -625,6 +650,42 @@ export default function Home() {
             </div>
             <div className="result-actions"><button className="secondary-button" type="button" onClick={() => setView("dashboard")}>{t.guide.back}</button></div>
           </div>
+        )}
+
+        {view === "video" && (
+          activeVideo ? (
+            <VideoPlayer
+              key={`${activeVideo.id}-${lang}`}
+              lang={lang}
+              video={activeVideo}
+              onExit={() => setActiveVideoId(null)}
+              onStartMission={(missionId) => {
+                const mission = course.find((item) => item.id === missionId);
+                if (mission) { setActiveVideoId(null); startMission(mission); }
+              }}
+            />
+          ) : (
+            <div className="guide page-enter">
+              <div className="episode-kicker"><span>{t.videos.libraryKicker}</span><i /> {t.videos.tapToStart}</div>
+              <div className="guide-heading">
+                <h1>{t.videos.libraryTitle}</h1>
+                <p>{t.videos.libraryCopy}</p>
+              </div>
+              <div className="video-library-grid">
+                {videos.map((item) => (
+                  <button className="video-card comic-box" key={item.id} type="button" onClick={() => setActiveVideoId(item.id)}>
+                    <span className="video-card-thumb" aria-hidden="true"><i className="vsp-play">▶</i><b>{item.minutes}</b></span>
+                    <span className="video-card-body">
+                      <span className="caption-label">{t.videos.episode} {String(item.number).padStart(2, "0")}</span>
+                      <strong>{item.title}</strong>
+                      <small>{item.subtitle}</small>
+                      <span className="video-card-cta">{t.videos.watch} →</span>
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )
         )}
 
         {view === "results" && (
