@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { Choice, Dimension, Mission, Step } from "./course";
+import { XP_FIRST_TRY, XP_RETRY } from "./game";
 import { fmt, uiStrings, type Lang } from "./i18n";
 
 export type DimensionStats = Record<Dimension, { attempts: number; firstTryCorrect: number }>;
@@ -98,12 +99,16 @@ export function MissionPlayer({
   const [sortChecked, setSortChecked] = useState(false);
   const [beatIndex, setBeatIndex] = useState(0);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
+  const [combo, setCombo] = useState(0);
+  const [xpGain, setXpGain] = useState(0);
+  const [fxKey, setFxKey] = useState(0);
 
   const step = mission.steps[stepIndex];
   const isLast = stepIndex === mission.steps.length - 1;
 
   function recordAttempt(dimension: Dimension, correct: boolean) {
-    if (!attempted.has(step.id)) {
+    const firstAttempt = !attempted.has(step.id);
+    if (firstAttempt) {
       setAttempted((current) => new Set(current).add(step.id));
       setStats((current) => ({
         ...current,
@@ -113,7 +118,14 @@ export function MissionPlayer({
         },
       }));
     }
-    if (!correct) setMistakes((count) => count + 1);
+    if (correct) {
+      setXpGain(firstAttempt ? XP_FIRST_TRY : XP_RETRY);
+      if (firstAttempt) setCombo((value) => value + 1);
+    } else {
+      setCombo(0);
+      setMistakes((count) => count + 1);
+    }
+    setFxKey((value) => value + 1);
   }
 
   function advance() {
@@ -324,9 +336,19 @@ export function MissionPlayer({
         )}
 
         {feedback && step.kind !== "lesson" && (
-          <div className={`feedback ${feedback.correct ? "correct" : "coach"}`} role="status">
-            <span>{feedback.correct ? "✓" : "!"}</span>
-            <p><strong>{feedback.correct ? t.cleared : t.coaching}</strong>{feedback.text}</p>
+          <div className={`feedback ${feedback.correct ? "correct" : "coach shake"}`} key={fxKey} role="status">
+            <span className="feedback-icon">
+              {feedback.correct ? "✓" : "!"}
+              {feedback.correct && <b className="burst" aria-hidden="true"><i /><i /><i /><i /><i /><i /><i /><i /></b>}
+            </span>
+            <p>
+              <strong>
+                {feedback.correct ? t.cleared : t.coaching}
+                {feedback.correct && xpGain > 0 && <em className="xp-pop">+{xpGain} {uiStrings[lang].game.xp}</em>}
+                {feedback.correct && combo >= 2 && <em className="combo-chip">🔥 {uiStrings[lang].game.combo} ×{combo}</em>}
+              </strong>
+              {feedback.text}
+            </p>
             {feedback.correct && (
               <button type="button" onClick={advance}>{isLast ? t.finishMission : t.nextScene} →</button>
             )}

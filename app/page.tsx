@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AdminPortal } from "./AdminPortal";
 import { LearnerProfile, Onboarding } from "./Onboarding";
 import { courseMinutes, missionScore, type Dimension, type Mission } from "./course";
+import { badges as badgeDefs, evaluateBadges, missionXp, nextRank, rankForXp, updateStreak, type StreakState } from "./game";
 import { fmt, getCourse, getFieldGuide, uiStrings, type Lang } from "./i18n";
 import { DimensionStats, emptyDimensionStats, MissionPlayer } from "./MissionPlayer";
 
@@ -18,7 +19,42 @@ type CourseProgress = {
   dims: DimensionStats;
   certificateId?: string;
   courseCompletedAt?: string;
+  xp?: number;
+  streak?: StreakState;
+  badges?: Record<string, string>;
 };
+
+type DebriefResult = {
+  missionId: string;
+  score: number;
+  mistakes: number;
+  xpAnswers: number;
+  xpMissionBonus: number;
+  xpFlawlessBonus: number;
+  xpTotal: number;
+  newBadges: string[];
+};
+
+function useCountUp(target: number, durationMs = 900) {
+  const [value, setValue] = useState(0);
+  const raf = useRef(0);
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setValue(target);
+      return;
+    }
+    const start = performance.now();
+    const tick = (now: number) => {
+      const progress = Math.min(1, (now - start) / durationMs);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setValue(Math.round(target * eased));
+      if (progress < 1) raf.current = requestAnimationFrame(tick);
+    };
+    raf.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf.current);
+  }, [target, durationMs]);
+  return value;
+}
 
 const PROGRESS_KEY = "cal-course-progress-v2";
 const LEGACY_PROGRESS_KEY = "ctrl-alt-learn-progress";
@@ -163,6 +199,20 @@ function MasteryPanel({ lang, progress, missionCount }: { lang: Lang; progress: 
           </div>
         );
       })}
+      <div className="trophy-case">
+        <span className="caption-label">{t.game.trophyCase}</span>
+        <div className="trophy-grid">
+          {badgeDefs.map((badge) => {
+            const earned = Boolean(progress.badges?.[badge.id]);
+            const meta = t.game.badges[badge.id];
+            return (
+              <span className={`trophy ${earned ? "earned" : "locked"}`} key={badge.id} title={`${meta.name} — ${meta.desc}`}>
+                {badge.icon}
+              </span>
+            );
+          })}
+        </div>
+      </div>
       <div className="desk-note"><span>{t.dashboard.deskNote}</span><strong>{t.dashboard.deskNoteTitle}</strong><p>{t.dashboard.deskNoteCopy}</p></div>
       <div className="certificate-teaser"><span>☆</span><p><strong>{t.dashboard.certTeaser}</strong><small>{fmt(t.dashboard.certTeaserCopy, { n: missionCount })}</small></p></div>
     </aside>
@@ -198,7 +248,9 @@ function CourseMap({
             >
               <div className="map-card-top">
                 <span className="map-number">{state === "done" ? "✓" : String(mission.number).padStart(2, "0")}</span>
-                <span className="map-status">{state === "done" ? `${record.score}%` : state === "current" ? t.play : t.lockedTag}</span>
+                <span className={`map-status ${state === "done" && record.score === 100 ? "perfect" : ""}`}>
+                  {state === "done" ? (record.score === 100 ? `🏅 ${uiStrings[lang].game.perfect}` : `${record.score}%`) : state === "current" ? t.play : t.lockedTag}
+                </span>
               </div>
               <strong>{mission.title}</strong>
               <small>{mission.description}</small>
@@ -211,13 +263,92 @@ function CourseMap({
   );
 }
 
+function MissionDebrief({
+  courseComplete,
+  courseLength,
+  doneCount,
+  lang,
+  mission,
+  overall,
+  result,
+  upNext,
+  onNext,
+  onResults,
+  onReturn,
+}: {
+  courseComplete: boolean;
+  courseLength: number;
+  doneCount: number;
+  lang: Lang;
+  mission: Mission;
+  overall: number;
+  result: DebriefResult;
+  upNext: Mission | null;
+  onNext: (mission: Mission) => void;
+  onResults: () => void;
+  onReturn: () => void;
+}) {
+  const t = uiStrings[lang];
+  const animatedScore = useCountUp(result.score);
+  const animatedXp = useCountUp(result.xpTotal, 1100);
+  return (
+    <div className="results page-enter">
+      {result.mistakes === 0 && <div className="confetti" aria-hidden="true"><i /><i /><i /><i /><i /><i /></div>}
+      <span className="episode-kicker">{fmt(t.debrief.missionComplete, { n: String(mission.number).padStart(2, "0") })}</span>
+      <h1>{result.mistakes === 0 ? t.debrief.flawless : t.debrief.cleared}</h1>
+      <p>{result.mistakes === 0 ? t.debrief.flawlessCopy : `${result.mistakes} ${result.mistakes === 1 ? t.debrief.coachingMoment : t.debrief.coachingMoments} ${t.debrief.coachingCopy}`}</p>
+      <div className="result-grid">
+        <section className="score-card comic-box">
+          <span className="score-ring"><b>{animatedScore}</b><small>{t.debrief.masteryWord}</small></span>
+          <div><span>{t.debrief.missionResult}</span><h2>{mission.title}</h2><p>{fmt(t.debrief.progressLine, { done: doneCount, total: courseLength, score: overall })}</p></div>
+        </section>
+        <section className="takeaway-card comic-box"><span>{t.debrief.keepRule}</span><h2>{mission.rule}</h2><p>{mission.ruleDetail}</p></section>
+      </div>
+      <div className="debrief-reward-grid">
+        <section className="xp-card comic-box">
+          <div className="xp-card-head"><span className="caption-label">{t.game.xpEarned}</span><b className="xp-total">⚡ +{animatedXp}</b></div>
+          <div className="xp-rows">
+            <div className="xp-row" style={{ animationDelay: ".15s" }}><span>{t.game.correctAnswers}</span><b>+{result.xpAnswers}</b></div>
+            <div className="xp-row" style={{ animationDelay: ".3s" }}><span>{t.game.missionCleared}</span><b>+{result.xpMissionBonus}</b></div>
+            {result.xpFlawlessBonus > 0 && (
+              <div className="xp-row flawless" style={{ animationDelay: ".45s" }}><span>✨ {t.game.flawlessBonus}</span><b>+{result.xpFlawlessBonus}</b></div>
+            )}
+          </div>
+        </section>
+        {result.newBadges.length > 0 && (
+          <section className="badge-unlocks">
+            {result.newBadges.map((id, index) => {
+              const def = badgeDefs.find((badge) => badge.id === id);
+              const meta = t.game.badges[id];
+              return (
+                <div className="badge-unlock comic-box" key={id} style={{ animationDelay: `${0.3 + index * 0.2}s` }}>
+                  <span className="badge-unlock-icon">{def?.icon}</span>
+                  <div><span className="caption-label">{t.game.badgeUnlocked}</span><strong>{meta.name}</strong><small>{meta.desc}</small></div>
+                </div>
+              );
+            })}
+          </section>
+        )}
+      </div>
+      <div className="result-actions">
+        {courseComplete ? (
+          <button className="primary-button" type="button" onClick={onResults}>{t.debrief.finalResults} <span>→</span></button>
+        ) : (
+          upNext && <button className="primary-button" type="button" onClick={() => onNext(upNext)}>{t.debrief.nextMission} {upNext.shortTitle} <span>→</span></button>
+        )}
+        <button className="secondary-button" type="button" onClick={onReturn}>{t.debrief.returnMap}</button>
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
   const [mode, setMode] = useState<AppMode>("loading");
   const [profile, setProfile] = useState<LearnerProfile | null>(null);
   const [view, setView] = useState<View>("dashboard");
   const [progress, setProgress] = useState<CourseProgress>(freshProgress);
   const [activeMissionId, setActiveMissionId] = useState<string | null>(null);
-  const [lastResult, setLastResult] = useState<{ missionId: string; score: number; mistakes: number } | null>(null);
+  const [lastResult, setLastResult] = useState<DebriefResult | null>(null);
   const [learnerName, setLearnerName] = useState("");
 
   useEffect(() => {
@@ -270,10 +401,21 @@ export default function Home() {
       mistakes: result.mistakes,
       completedAt: new Date().toISOString(),
     };
+
+    const flawless = result.mistakes === 0;
+    const firstTryTotal = (Object.values(result.stats) as { attempts: number; firstTryCorrect: number }[])
+      .reduce((sum, dim) => sum + dim.firstTryCorrect, 0);
+    const attemptsTotal = (Object.values(result.stats) as { attempts: number; firstTryCorrect: number }[])
+      .reduce((sum, dim) => sum + dim.attempts, 0);
+    const xp = missionXp(firstTryTotal, attemptsTotal - firstTryTotal, flawless);
+
     const updated: CourseProgress = {
       ...progress,
       missions: { ...progress.missions, [activeMission.id]: record },
       dims: mergeStats(progress.dims, result.stats),
+      xp: (progress.xp ?? 0) + xp.total,
+      streak: updateStreak(progress.streak),
+      badges: { ...progress.badges },
     };
 
     const nowComplete = course.every((mission) => updated.missions[mission.id]);
@@ -290,9 +432,35 @@ export default function Home() {
       }
     }
 
+    const records = Object.values(updated.missions);
+    const newBadges = evaluateBadges(
+      {
+        completedMissions: Object.keys(updated.missions).length,
+        totalMissions: course.length,
+        flawlessMissions: records.filter((item) => item.mistakes === 0).length,
+        perfectMissions: records.filter((item) => item.score === 100).length,
+        courseComplete: nowComplete,
+        streak: updated.streak?.count ?? 0,
+        lastMissionMistakes: result.mistakes,
+        dims: updated.dims,
+      },
+      updated.badges ?? {},
+    );
+    const now = new Date().toISOString();
+    for (const id of newBadges) updated.badges![id] = now;
+
     setProgress(updated);
     saveProgress(updated);
-    setLastResult({ missionId: activeMission.id, score: record.score, mistakes: result.mistakes });
+    setLastResult({
+      missionId: activeMission.id,
+      score: record.score,
+      mistakes: result.mistakes,
+      xpAnswers: xp.answers,
+      xpMissionBonus: xp.missionBonus,
+      xpFlawlessBonus: xp.flawlessBonus,
+      xpTotal: xp.total,
+      newBadges,
+    });
     setView("debrief");
   }
 
@@ -335,6 +503,15 @@ export default function Home() {
         <header className="topbar">
           <div><span className="edition-chip">{t.topbar.edition}</span><span className="status-chip"><i /> {t.topbar.connected}</span></div>
           <div className="learner-controls">
+            <div className="game-chips">
+              {(progress.streak?.count ?? 0) > 0 && (
+                <span className="streak-chip" title={t.game.streakAria}><i>🔥</i>{progress.streak!.count}</span>
+              )}
+              <span className="xp-chip" title={t.game.xp}><i>⚡</i>{progress.xp ?? 0} {t.game.xp}</span>
+              <span className="rank-chip" title={(() => { const next = nextRank(progress.xp ?? 0); return next ? fmt(t.game.toNextRank, { n: next.minXp - (progress.xp ?? 0), rank: t.game.ranks[next.id] }) : t.game.topRank; })()}>
+                <i>{rankForXp(progress.xp ?? 0).icon}</i>{t.game.ranks[rankForXp(progress.xp ?? 0).id]}
+              </span>
+            </div>
             <div className="lang-toggle compact" role="group" aria-label="Language">
               {(["en", "es"] as const).map((code) => (
                 <button aria-pressed={lang === code} className={lang === code ? "active" : ""} key={code} type="button" onClick={() => setLanguage(code)}>
@@ -414,26 +591,19 @@ export default function Home() {
         )}
 
         {view === "debrief" && lastResult && lastMission && (
-          <div className="results page-enter">
-            <span className="episode-kicker">{fmt(t.debrief.missionComplete, { n: String(lastMission.number).padStart(2, "0") })}</span>
-            <h1>{lastResult.mistakes === 0 ? t.debrief.flawless : t.debrief.cleared}</h1>
-            <p>{lastResult.mistakes === 0 ? t.debrief.flawlessCopy : `${lastResult.mistakes} ${lastResult.mistakes === 1 ? t.debrief.coachingMoment : t.debrief.coachingMoments} ${t.debrief.coachingCopy}`}</p>
-            <div className="result-grid">
-              <section className="score-card comic-box">
-                <span className="score-ring"><b>{lastResult.score}</b><small>{t.debrief.masteryWord}</small></span>
-                <div><span>{t.debrief.missionResult}</span><h2>{lastMission.title}</h2><p>{fmt(t.debrief.progressLine, { done: Object.keys(progress.missions).length, total: course.length, score })}</p></div>
-              </section>
-              <section className="takeaway-card comic-box"><span>{t.debrief.keepRule}</span><h2>{lastMission.rule}</h2><p>{lastMission.ruleDetail}</p></section>
-            </div>
-            <div className="result-actions">
-              {courseComplete ? (
-                <button className="primary-button" type="button" onClick={() => setView("results")}>{t.debrief.finalResults} <span>→</span></button>
-              ) : (
-                upNext && <button className="primary-button" type="button" onClick={() => startMission(upNext)}>{t.debrief.nextMission} {upNext.shortTitle} <span>→</span></button>
-              )}
-              <button className="secondary-button" type="button" onClick={() => { setActiveMissionId(null); setView("dashboard"); }}>{t.debrief.returnMap}</button>
-            </div>
-          </div>
+          <MissionDebrief
+            courseComplete={courseComplete}
+            courseLength={course.length}
+            doneCount={Object.keys(progress.missions).length}
+            lang={lang}
+            mission={lastMission}
+            overall={score}
+            result={lastResult}
+            upNext={upNext}
+            onNext={(mission) => startMission(mission)}
+            onResults={() => setView("results")}
+            onReturn={() => { setActiveMissionId(null); setView("dashboard"); }}
+          />
         )}
 
         {view === "guide" && (

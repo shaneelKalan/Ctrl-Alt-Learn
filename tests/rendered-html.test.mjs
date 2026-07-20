@@ -80,6 +80,25 @@ test("includes a durable-capable training record store", async () => {
   assert.match(completions, /writeStore/);
 });
 
+test("ships the gamification layer in both languages", async () => {
+  const [game, i18n, page] = await Promise.all([
+    source("app/game.ts"),
+    source("app/i18n.ts"),
+    source("app/page.tsx"),
+  ]);
+
+  for (const id of ["first-flight", "flawless", "comeback", "halfway", "prompt-pro", "on-fire", "graduate", "perfectionist"]) {
+    assert.match(game, new RegExp(`"${id}"`));
+    assert.match(i18n, new RegExp(`"${id}"|${id}:`));
+  }
+  for (const rank of ["trainee", "cadet", "first-officer", "captain", "legend"]) assert.match(game, new RegExp(`"${rank}"`));
+  assert.match(game, /updateStreak/);
+  assert.match(game, /missionXp/);
+  assert.match(i18n, /Leyenda del Vuelo/);
+  assert.match(page, /evaluateBadges/);
+  assert.match(page, /updateStreak/);
+});
+
 test("ships the full eight-mission course", async () => {
   const [course, player, page] = await Promise.all([
     source("app/course.ts"),
