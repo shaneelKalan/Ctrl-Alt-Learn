@@ -500,8 +500,63 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 4px solid 
 .vs-wave span:last-child { animation-delay: .3s; }
 @keyframes wave { 0%, 100% { transform: rotate(-12deg); } 50% { transform: rotate(12deg); } }
 
+/* Copilot shield */
+.vs-shield { position: relative; display: flex; flex-direction: column; align-items: center; gap: 7px; width: 150px; padding: 24px 18px 30px; border: 4px solid #fff; border-radius: 22px 22px 46px 46px / 20px 20px 80px 80px; background: linear-gradient(160deg, #2b6be0, #1641a4); box-shadow: 0 0 42px #4b8bff77; animation: bigplay-pulse 2.6s ease-in-out infinite; }
+.vs-shield-mark { font-size: 30px; }
+.vs-shield b { font-size: 21px; letter-spacing: -.02em; }
+.vs-shield-check { position: absolute; right: -12px; top: -12px; width: 36px; height: 36px; display: grid; place-items: center; border: 3px solid var(--ink); border-radius: 50%; background: var(--teal); color: var(--ink); font-style: normal; font-weight: 900; box-shadow: 2px 2px 0 var(--ink); }
+.vs-approved { padding: 6px 13px; border: 2px solid var(--ink); border-radius: 999px; background: var(--yellow); color: var(--ink); font-weight: 900; font-size: 11px; box-shadow: 2px 2px 0 var(--ink); }
+
+/* Guardrails ring */
+.vs-guard-ring { position: relative; width: 250px; height: 150px; display: grid; place-items: center; border: 4px solid var(--teal); border-radius: 18px; background: #10b99c14; animation: guard-glow 2.6s ease-in-out infinite; }
+@keyframes guard-glow { 0%, 100% { box-shadow: 0 0 20px #10b99c44, inset 0 0 16px #10b99c22; } 50% { box-shadow: 0 0 44px #10b99c99, inset 0 0 26px #10b99c55; } }
+.vs-guard-tag { position: absolute; top: -13px; left: 18px; padding: 3px 9px; border: 2px solid var(--ink); border-radius: 6px; background: var(--teal); color: var(--ink); font-family: var(--font-geist-mono); font-size: 10px; font-weight: 900; }
+.vs-guard-data { padding: 12px 18px; border: 3px solid var(--ink); border-radius: 12px; background: #fff; color: var(--ink); font-weight: 800; box-shadow: 3px 3px 0 #ffffff22; }
+
+/* Two chats: approved vs not */
+.vs-two-chats { grid-auto-flow: column; gap: 22px; }
+.vs-chatcard { display: grid; justify-items: center; gap: 6px; width: 156px; padding: 18px; border: 3px solid var(--ink); border-radius: 14px; box-shadow: 4px 4px 0 #ffffff22; }
+.vs-chatcard b { color: var(--ink); font-size: 16px; } .vs-chatcard small { color: #4a4a4a; font-size: 10px; } .vs-chatcard i { padding: 3px 9px; border-radius: 999px; font-style: normal; font-size: 10px; font-weight: 900; }
+.vs-chatcard.ok { background: var(--mint); } .vs-chatcard.ok i { background: var(--teal); color: var(--ink); }
+.vs-chatcard.no { background: #ffe1dc; border-style: dashed; animation: buzz 1.6s ease-in-out infinite; } .vs-chatcard.no i { background: var(--coral); color: var(--ink); }
+
+/* Two accounts */
+.vs-two-accounts { grid-auto-flow: column; gap: 22px; }
+.vs-acct { display: grid; justify-items: center; gap: 5px; width: 162px; padding: 18px; border: 3px solid var(--ink); border-radius: 14px; background: #fff; color: var(--ink); box-shadow: 4px 4px 0 #ffffff22; animation: power-in .5s cubic-bezier(.34,1.56,.64,1) both; }
+.vs-acct.home { background: #eef2ff; animation-delay: .2s; }
+.vs-acct span { font-size: 34px; } .vs-acct b { font-size: 14px; } .vs-acct small { color: #555; font-size: 10px; }
+
+/* Personal-safe home icons */
+.vs-home { display: flex; gap: 22px; }
+.vs-home span { font-size: 46px; animation: q-float 2.2s ease-in-out infinite; }
+.vs-home span:nth-child(2) { animation-delay: .3s; } .vs-home span:nth-child(3) { animation-delay: .6s; }
+
+/* Cross the streams */
+.vs-cross { position: relative; display: flex; align-items: center; gap: 18px; }
+.vs-cross-from, .vs-cross-to { padding: 14px 18px; border: 3px solid var(--ink); border-radius: 12px; color: var(--ink); font-weight: 800; box-shadow: 3px 3px 0 #ffffff22; }
+.vs-cross-from { background: #fff; } .vs-cross-to { background: #eef2ff; }
+.vs-cross-arrow { font-size: 30px; color: var(--coral); font-style: normal; animation: arrow-nudge 1.4s ease-in-out infinite; }
+.vs-cross-no { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 62px; height: 62px; display: grid; place-items: center; border: 4px solid var(--coral); border-radius: 50%; background: #fff; color: var(--coral); font-size: 30px; font-weight: 900; animation: buzz 1s ease-in-out infinite; }
+
+/* Traffic light */
+.vs-lights { display: flex; gap: 18px; padding: 14px 20px; border: 4px solid var(--ink); border-radius: 40px; background: #101f3d; }
+.vs-lights i { width: 44px; height: 44px; border-radius: 50%; background: #ffffff1a; }
+.vs-lights .g { background: var(--teal); color: var(--teal); animation: light-blink 3s steps(1, end) infinite; }
+.vs-lights .y { background: #e1a926; color: #e1a926; animation: light-blink 3s steps(1, end) 1s infinite; }
+.vs-lights .r { background: var(--coral); color: var(--coral); animation: light-blink 3s steps(1, end) 2s infinite; }
+@keyframes light-blink { 0%, 33% { filter: brightness(1.5); box-shadow: 0 0 18px currentColor; } 34%, 100% { filter: brightness(.45); box-shadow: none; } }
+.vs-lights-labels { display: flex; gap: 18px; padding: 0 20px; }
+.vs-lights-labels span { width: 44px; text-align: center; color: #fff; font-size: 11px; font-weight: 800; }
+
+/* Stop sign */
+.vs-stopsign { width: 112px; height: 112px; display: grid; place-items: center; border: 5px solid #fff; border-radius: 20px; background: var(--coral); font-size: 50px; box-shadow: 0 0 34px #ff766b66; animation: buzz 1.5s ease-in-out infinite; }
+.vs-stop-label { padding: 8px 15px; border: 3px solid var(--ink); border-radius: 10px; background: var(--yellow); color: var(--ink); font-weight: 900; box-shadow: 3px 3px 0 var(--ink); }
+.video-endback { color: #b9c6e8; }
+
 @media (max-width: 780px) {
   .video-library-grid { grid-template-columns: 1fr; }
+  .vs-two-chats, .vs-two-accounts { grid-auto-flow: row; }
+  .vs-cross { flex-direction: column; }
   .video-spotlight { flex-wrap: wrap; }
   .video-spotlight-cta { width: 100%; text-align: center; }
   .video-controls { flex-wrap: wrap; }

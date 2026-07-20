@@ -2,9 +2,10 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { fmt, uiStrings, type Lang } from "./i18n";
-import type { VideoLesson } from "./videos";
+import type { VideoLesson, VideoScene } from "./videos";
 
-function VideoStage({ visual, playing }: { visual: string; playing: boolean }) {
+function VideoStage({ scene, title, playing }: { scene: VideoScene; title: string; playing: boolean }) {
+  const visual = scene.visual;
   const cls = `vid-art vs-${visual} ${playing ? "is-playing" : "is-paused"}`;
 
   switch (visual) {
@@ -12,7 +13,7 @@ function VideoStage({ visual, playing }: { visual: string; playing: boolean }) {
       return (
         <div className={cls} aria-hidden="true">
           <span className="vs-keys"><i>⌃</i><i>⌥</i><i>↵</i></span>
-          <strong>Intro to AI</strong>
+          <strong>{title}</strong>
           <em>Ctrl+Alt+Learn</em>
           <div className="vs-sparkles"><i /><i /><i /><i /><i /></div>
         </div>
@@ -104,13 +105,77 @@ function VideoStage({ visual, playing }: { visual: string; playing: boolean }) {
           <div className="vs-human"><span>🧑‍✈️</span><b className="vs-stamp">APPROVED</b></div>
         </div>
       );
+    case "copilot":
+      return (
+        <div className={cls} aria-hidden="true">
+          <div className="vs-shield"><span className="vs-shield-mark">✦</span><b>Copilot</b><i className="vs-shield-check">✓</i></div>
+          <div className="vs-approved">DASI-approved</div>
+        </div>
+      );
+    case "guardrails":
+      return (
+        <div className={cls} aria-hidden="true">
+          <div className="vs-guard-ring">
+            <span className="vs-guard-tag">DASI</span>
+            <span className="vs-guard-data">🔒 Your work data</span>
+          </div>
+          <div className="vs-gen-label">inside the protections</div>
+        </div>
+      );
+    case "two-chats":
+      return (
+        <div className={cls} aria-hidden="true">
+          <div className="vs-chatcard ok"><b>Copilot</b><small>at work</small><i>✓ approved</i></div>
+          <div className="vs-chatcard no"><b>Other AI</b><small>personal / free</small><i>✕ not for work</i></div>
+        </div>
+      );
+    case "two-accounts":
+      return (
+        <div className={cls} aria-hidden="true">
+          <div className="vs-acct work"><span>🪪</span><b>Work account</b><small>DASI login</small></div>
+          <div className="vs-acct home"><span>🏠</span><b>Personal account</b><small>your own email</small></div>
+        </div>
+      );
+    case "personal-safe":
+      return (
+        <div className={cls} aria-hidden="true">
+          <div className="vs-home"><span>🍳</span><span>✈️</span><span>📚</span></div>
+          <div className="vs-gen-label">personal accounts — great for life</div>
+        </div>
+      );
+    case "crossstreams":
+      return (
+        <div className={cls} aria-hidden="true">
+          <div className="vs-cross">
+            <span className="vs-cross-from">🔒 Work data</span>
+            <i className="vs-cross-arrow">→</i>
+            <span className="vs-cross-to">🏠 Personal</span>
+            <b className="vs-cross-no">✕</b>
+          </div>
+          <div className="vs-gen-label">don't cross the streams</div>
+        </div>
+      );
+    case "traffic":
+      return (
+        <div className={cls} aria-hidden="true">
+          <div className="vs-lights"><i className="g" /><i className="y" /><i className="r" /></div>
+          <div className="vs-lights-labels"><span>Go</span><span>Review</span><span>Stop</span></div>
+        </div>
+      );
+    case "stop":
+      return (
+        <div className={cls} aria-hidden="true">
+          <div className="vs-stopsign">✋</div>
+          <div className="vs-stop-label">Stop &amp; ask first</div>
+        </div>
+      );
     case "recap":
       return (
         <div className={cls} aria-hidden="true">
           <ul className="vs-recap-list">
-            <li><i>✓</i> Predicts — can be confidently wrong</li>
-            <li><i>✓</i> Doesn't know your world</li>
-            <li><i>✓</i> Never decides alone</li>
+            {(scene.recapItems ?? ["", "", ""]).map((item, index) => (
+              <li key={index}><i>✓</i> {item}</li>
+            ))}
           </ul>
           <div className="vs-wave"><span>👋</span><span>👋</span></div>
         </div>
@@ -125,11 +190,15 @@ export function VideoPlayer({
   video,
   onExit,
   onStartMission,
+  onNextVideo,
+  nextVideoTitle,
 }: {
   lang: Lang;
   video: VideoLesson;
   onExit: () => void;
   onStartMission?: (missionId: string) => void;
+  onNextVideo?: () => void;
+  nextVideoTitle?: string;
 }) {
   const t = uiStrings[lang].videos;
   const [sceneIndex, setSceneIndex] = useState(0);
@@ -234,6 +303,7 @@ export function VideoPlayer({
   }
 
   const progressPct = ((sceneIndex + (ended ? 1 : 0)) / total) * 100;
+  const hasMissionCta = Boolean(video.linkMissionId && onStartMission);
 
   return (
     <div className="video-view page-enter">
@@ -244,7 +314,7 @@ export function VideoPlayer({
 
       <div className="video-frame comic-box">
         <div className="video-stage-wrap">
-          <VideoStage visual={scene.visual} playing={playing && started && !ended} />
+          <VideoStage scene={scene} title={video.title} playing={playing && started && !ended} />
 
           <div className="video-hud">
             <span className="video-badge"><i className="record-dot" /> {t.episode} {String(video.number).padStart(2, "0")}</span>
@@ -265,13 +335,19 @@ export function VideoPlayer({
               <h2>{t.finishedTitle}</h2>
               <p>{t.finishedCopy}</p>
               <div className="video-endactions">
-                {video.linkMissionId && onStartMission && (
-                  <button className="primary-button" type="button" onClick={() => onStartMission(video.linkMissionId!)}>
+                {hasMissionCta && (
+                  <button className="primary-button" type="button" onClick={() => onStartMission!(video.linkMissionId!)}>
                     {t.startMission} <span>→</span>
+                  </button>
+                )}
+                {onNextVideo && (
+                  <button className={hasMissionCta ? "secondary-button" : "primary-button"} type="button" onClick={onNextVideo}>
+                    {t.nextEpisode}: {nextVideoTitle} <span>→</span>
                   </button>
                 )}
                 <button className="secondary-button" type="button" onClick={start}>↺ {t.replayVideo}</button>
               </div>
+              <button className="text-button video-endback" type="button" onClick={onExit}>{t.backToLibrary}</button>
             </div>
           )}
 
@@ -296,7 +372,7 @@ export function VideoPlayer({
                 aria-label={fmt(t.sceneOf, { i: index + 1, n: total })}
                 aria-pressed={index === sceneIndex && started}
                 className={`video-chip ${index < sceneIndex || ended ? "done" : index === sceneIndex && started ? "active" : ""}`}
-                key={item.id}
+                key={item.id + index}
                 type="button"
                 onClick={() => { setStarted(true); setPlaying(true); goTo(index); }}
               />

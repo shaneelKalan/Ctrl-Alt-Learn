@@ -25,7 +25,7 @@ test("ships guided learner onboarding", async () => {
   assert.match(onboarding, /language: lang/);
 });
 
-test("ships the narrated intro video in both languages", async () => {
+test("ships narrated videos, DASI/Copilot policy, in both languages", async () => {
   const [videosEn, videosEs, player, page] = await Promise.all([
     source("app/videos.ts"),
     source("app/videos.es.ts"),
@@ -33,16 +33,25 @@ test("ships the narrated intro video in both languages", async () => {
     source("app/page.tsx"),
   ]);
 
-  assert.match(videosEn, /id: "intro-to-ai"/);
-  assert.match(videosEs, /id: "intro-to-ai"/);
+  // All four episodes exist in both languages.
+  for (const id of ["intro-to-ai", "copilot-safe-tool", "work-vs-personal", "dasi-playbook"]) {
+    assert.match(videosEn, new RegExp(`id: "${id}"`));
+    assert.match(videosEs, new RegExp(`id: "${id}"`));
+  }
 
-  // Both language tracks must share the same scene ids in the same order.
+  // Both language tracks share the same scene ids in the same order.
   const sceneIds = (src) => [...src.matchAll(/id: "([\w-]+)",\s*\n\s*visual:/g)].map((m) => m[1]);
   const en = sceneIds(videosEn);
-  assert.ok(en.length >= 12, `expected >= 12 scenes, got ${en.length}`);
+  assert.ok(en.length >= 35, `expected >= 35 scenes across episodes, got ${en.length}`);
   assert.deepEqual(sceneIds(videosEs), en);
 
-  // Player must speak narration and degrade gracefully without voices.
+  // DASI's approved-tool policy is taught, in both languages.
+  assert.match(videosEn, /Microsoft Copilot/);
+  assert.match(videosEn, /approved/i);
+  assert.match(videosEs, /Microsoft Copilot/);
+  assert.match(videosEs, /aprobad/i);
+
+  // Player speaks narration and degrades gracefully without voices.
   assert.match(player, /SpeechSynthesisUtterance/);
   assert.match(player, /voiceschanged/);
   assert.match(player, /setTimeout/); // timer fallback when speech is unavailable

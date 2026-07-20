@@ -653,18 +653,24 @@ export default function Home() {
         )}
 
         {view === "video" && (
-          activeVideo ? (
-            <VideoPlayer
-              key={`${activeVideo.id}-${lang}`}
-              lang={lang}
-              video={activeVideo}
-              onExit={() => setActiveVideoId(null)}
-              onStartMission={(missionId) => {
-                const mission = course.find((item) => item.id === missionId);
-                if (mission) { setActiveVideoId(null); startMission(mission); }
-              }}
-            />
-          ) : (
+          activeVideo ? (() => {
+            const idx = videos.findIndex((item) => item.id === activeVideo.id);
+            const next = idx >= 0 ? videos[idx + 1] : undefined;
+            return (
+              <VideoPlayer
+                key={`${activeVideo.id}-${lang}`}
+                lang={lang}
+                video={activeVideo}
+                nextVideoTitle={next?.title}
+                onExit={() => setActiveVideoId(null)}
+                onNextVideo={next ? () => setActiveVideoId(next.id) : undefined}
+                onStartMission={(missionId) => {
+                  const mission = course.find((item) => item.id === missionId);
+                  if (mission) { setActiveVideoId(null); startMission(mission); }
+                }}
+              />
+            );
+          })() : (
             <div className="guide page-enter">
               <div className="episode-kicker"><span>{t.videos.libraryKicker}</span><i /> {t.videos.tapToStart}</div>
               <div className="guide-heading">
