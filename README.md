@@ -1,53 +1,79 @@
 # Ctrl+Alt+Learn
 
-An interactive, workplace-sitcom-style AI literacy pilot for DASI. The current vertical slice includes onboarding, an eight-card AI preflight with knowledge checks, a safe practice bot that can run live with OpenAI or fall back to simulator mode, an acted aviation-parts sourcing scenario, interactive decisions, printable certificates, and an administrator control room.
+Interactive, scenario-based AI literacy training for modern teams. A comic-styled
+Next.js app that teaches everyday employees how to use AI chatbots safely and
+effectively — through playable missions, a guarded live AI practice lab, and not slideware.
 
-## Run locally
+## The course
 
-Requires Node.js 22.13 or newer.
+**AI Chatbots: Intro 101** — eight missions, ~29 minutes:
+
+1. **Meet Your AI Teammate** — what AI/LLMs/chatbots actually are
+2. **Superpowers & Limits** — strengths, hallucinations, spotting red flags
+3. **The Data Safety Checkpoint** — classify, minimize, and protect data
+4. **Work Mode** — green/yellow/red-light uses and accountability
+5. **Life Mode** — everyday wins, caution zones, AI-powered scams
+6. **Prompt Repair Shop** — prompt anatomy and iteration
+7. **Verify Before You Fly** — verification proportional to impact
+8. **The Final Shift Challenge** — capstone combining every skill
+
+Teaching-first and ADHD-friendly by design: tap-through lesson beats (one idea
+per screen), quick knowledge checks between them, four hands-on activity types
+(scenario choices, redaction boards, classification lanes, and a guided prompt
+builder), sequential unlocks, a mastery radar across four scoring dimensions,
+per-mission debriefs, an always-available Field Guide of cheat sheets, and a
+printable completion certificate.
+
+## Quick start
 
 ```bash
 npm install
-cp .env.example .env.local
+cp .env.example .env.local   # set ADMIN_PASSWORD
 npm run dev
 ```
 
-Open `http://localhost:3000`. Set `ADMIN_PASSWORD` in `.env.local` to access the control room.
+- Learner experience: `http://localhost:3000`
+- Admin control room: click **Admin** (password = `ADMIN_PASSWORD`)
 
-Without a Redis connection the app uses process-local preview storage. That is useful for interface testing but can reset whenever the development server or a Vercel Function restarts.
+## Configuration
 
-## Deploy a test environment to Vercel
+| Variable | Purpose |
+| --- | --- |
+| `ADMIN_PASSWORD` | Prototype admin login for the control room |
+| `KV_REST_API_URL` / `KV_REST_API_TOKEN` | Optional Vercel KV / Upstash Redis REST store for durable learner, assignment, and completion records |
+| `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | Upstash-native equivalents of the above |
+| `OPENAI_API_KEY` | Optional key that enables the live AI practice lab; without it, simulator mode is used |
+| `OPENAI_MODEL` | Optional model override for the live practice lab; defaults to `gpt-4.1-mini` |
 
-1. Import this repository into Vercel. It is a standard Next.js app; no build override is required.
-2. Add `ADMIN_PASSWORD` and `AUTH_SECRET` to the Vercel project's environment variables. Use separate long, random values.
-3. In the Vercel Marketplace, connect an Upstash Redis integration to the project.
-4. Confirm the integration provides `KV_REST_API_URL` and `KV_REST_API_TOKEN`. The commonly provided `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` names also work.
-5. Optional: add `OPENAI_API_KEY` and `OPENAI_MODEL` to enable the live AI practice bot. Without an API key, the bot remains in safe simulator mode.
-6. Redeploy after adding the variables.
-7. Complete the learner mission, then open **Admin → Reports** and confirm the completion appears.
+Without a KV store configured, server records fall back to per-instance memory —
+fine for local development and demos, not for a real pilot. Without `OPENAI_API_KEY`,
+the AI practice lab remains available in simulator mode; with the key, prompts are
+screened before the server calls OpenAI.
 
-The admin dashboard displays a warning when durable storage is not connected. Do not use real employee-sensitive information in this prototype; shared-password access and the completion endpoint are intended only for controlled usability testing.
+## Project layout
 
-## Environment variables
+- `app/course.ts` — the full course content model (missions, steps, coaching copy)
+- `app/MissionPlayer.tsx` — generic player for all activity types
+- `app/PracticeBotLab.tsx` — safe live/simulated AI practice lab
+- `app/api/practice-bot/route.ts` — guarded OpenAI Responses API proxy with simulator fallback
+- `app/page.tsx` — learner dashboard, course map, debriefs, results, certificate
+- `app/AdminPortal.tsx` — admin control room (people, assignments, courses, reports, settings)
+- `app/api/` — admin auth/session, admin data actions, completion recording
+- `db/index.ts` — JSON pilot store (KV-backed when configured, in-memory otherwise)
+- `docs/PRODUCT_BRIEF.md` — product vision, curriculum outline, and roadmap
 
-| Variable | Required | Purpose |
-| --- | --- | --- |
-| `ADMIN_PASSWORD` | Yes for admin | Temporary pilot control-room password. |
-| `AUTH_SECRET` | Yes on Vercel | Signs the admin session token. |
-| `KV_REST_API_URL` | For durable data | Upstash Redis REST endpoint. |
-| `KV_REST_API_TOKEN` | For durable data | Upstash Redis REST token. |
-| `OPENAI_API_KEY` | Optional | Enables the live AI practice bot. If omitted, simulator mode is used. |
-| `OPENAI_MODEL` | Optional | Model used by the live practice bot. Defaults to `gpt-4.1-mini`. |
+## Useful commands
 
-The equivalent `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` variables are supported as fallbacks. The live practice bot route screens sensitive-looking text before any OpenAI call and is still intended for fictional training prompts only.
+- `npm run dev` — start local development
+- `npm run build` — production build
+- `npm test` — build plus source-contract tests
+- `npm run lint` — ESLint
 
-## Commands
+## Deployment
 
-- `npm run dev` — start Next.js development mode.
-- `npm run build` — create the Vercel-compatible production build.
-- `npm run lint` — run ESLint.
-- `npm test` — build and run repository checks.
+Deploys as a standard Next.js app (Vercel-ready). Set `ADMIN_PASSWORD` and,
+for durable records, the KV variables in your project environment. Add
+`OPENAI_API_KEY` only when you want the practice lab to use live AI coaching.
 
-## Current pilot boundary
-
-One mission is playable and seven additional Intro 101 missions remain planned. See [`docs/PRODUCT_BRIEF.md`](docs/PRODUCT_BRIEF.md) for curriculum direction and the production-readiness guardrails.
+Production hardening still required before organizational rollout: real
+identity/SSO, roles, rate limiting, and audit logging (see the product brief).
