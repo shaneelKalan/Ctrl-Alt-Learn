@@ -9,17 +9,44 @@ async function source(path) {
 }
 
 test("ships guided learner onboarding", async () => {
-  const [page, onboarding] = await Promise.all([
+  const [page, onboarding, i18n] = await Promise.all([
     source("app/page.tsx"),
     source("app/Onboarding.tsx"),
+    source("app/i18n.ts"),
   ]);
 
   assert.match(page, /cal-learner-profile-v1/);
   assert.match(page, /<Onboarding/);
-  assert.match(onboarding, /WELCOME ABOARD/);
-  assert.match(onboarding, /YOUR BADGE/);
-  assert.match(onboarding, /YOUR FLIGHT PLAN/);
-  assert.match(onboarding, /TRUST CHECK/);
+  assert.match(i18n, /WELCOME ABOARD/);
+  assert.match(i18n, /YOUR BADGE/);
+  assert.match(i18n, /YOUR FLIGHT PLAN/);
+  assert.match(i18n, /TRUST CHECK/);
+  assert.match(onboarding, /lang-toggle/);
+  assert.match(onboarding, /language: lang/);
+});
+
+test("offers English and Spanish end to end", async () => {
+  const [i18n, courseEn, courseEs] = await Promise.all([
+    source("app/i18n.ts"),
+    source("app/course.ts"),
+    source("app/course.es.ts"),
+  ]);
+
+  assert.match(i18n, /"en"/);
+  assert.match(i18n, /"es"/);
+  assert.match(i18n, /BIENVENIDO A BORDO/);
+  assert.match(i18n, /PRUEBA DE CONFIANZA/);
+
+  // The Spanish course must mirror the English course structurally:
+  // identical mission/step/choice id sequences and step kinds.
+  const ids = (src) => [...src.matchAll(/\bid: "([\w-]+)"/g)].map((m) => m[1]);
+  const kinds = (src) => [...src.matchAll(/kind: "(\w+)",/g)].map((m) => m[1]);
+  assert.deepEqual(ids(courseEs), ids(courseEn));
+  assert.deepEqual(kinds(courseEs), kinds(courseEn));
+  const correct = (src) => [...src.matchAll(/correct: (true|false)/g)].map((m) => m[1]);
+  assert.deepEqual(correct(courseEs), correct(courseEn));
+  const selects = (src) => [...src.matchAll(/shouldSelect: (true|false)/g)].map((m) => m[1]);
+  assert.deepEqual(selects(courseEs), selects(courseEn));
 });
 
 test("protects admin routes with an HTTP-only session cookie", async () => {

@@ -239,7 +239,13 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 4px solid 
 .onboarding-header { min-height: 88px; display: flex; justify-content: space-between; align-items: center; gap: 20px; border-bottom: 1px solid #20274420; }
 .onboarding-brand { padding: 0; border: 0; color: var(--ink); }.onboarding-brand small { color: var(--muted); }
 .onboarding-brand .brand-keys i { border-color: var(--ink); background: var(--yellow); color: var(--ink); box-shadow: 2px 2px 0 var(--ink); }
-.admin-entry, .topbar-admin, .topbar-switch { padding: 9px 12px; border: 2px solid var(--ink); border-radius: 9px; background: #fff; box-shadow: 3px 3px 0 var(--ink); cursor: pointer; font-size: 10px; font-weight: 850; }.admin-entry span { margin-left: 8px; }.topbar-switch { border: 0; background: transparent; box-shadow: none; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }.topbar-admin { background: var(--yellow); }
+.admin-entry, .topbar-admin, .topbar-switch { padding: 9px 12px; border: 2px solid var(--ink); border-radius: 9px; background: #fff; box-shadow: 3px 3px 0 var(--ink); cursor: pointer; font-size: 10px; font-weight: 850; }
+.onboarding-header-actions { display: flex; align-items: center; gap: 10px; }
+.lang-toggle { display: inline-flex; overflow: hidden; border: 2px solid var(--ink); border-radius: 10px; background: #fff; box-shadow: 3px 3px 0 var(--ink); }
+.lang-toggle button { padding: 9px 12px; border: 0; background: transparent; cursor: pointer; font-size: 10px; font-weight: 850; }
+.lang-toggle button + button { border-left: 2px solid var(--ink); }
+.lang-toggle button.active { background: var(--yellow); }
+.lang-toggle.compact button { padding: 8px 9px; font-size: 9px; }.admin-entry span { margin-left: 8px; }.topbar-switch { border: 0; background: transparent; box-shadow: none; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }.topbar-admin { background: var(--yellow); }
 .learner-controls { display: flex; align-items: center; gap: 9px; }
 .onboarding-progress { height: 5px; margin: 0 calc(clamp(20px, 5vw, 76px) * -1); overflow: hidden; background: #20274412; }.onboarding-progress span { display: block; height: 100%; background: var(--teal); transition: width .3s ease; }
 .onboarding-hero { width: min(1320px, 100%); flex: 1; display: grid; grid-template-columns: minmax(0, .85fr) minmax(480px, 1.15fr); align-items: center; gap: clamp(35px, 7vw, 90px); margin: 0 auto; padding: 54px 0; }

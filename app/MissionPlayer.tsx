@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { Choice, Dimension, Mission, Step } from "./course";
+import { fmt, uiStrings, type Lang } from "./i18n";
 
 export type DimensionStats = Record<Dimension, { attempts: number; firstTryCorrect: number }>;
 
@@ -16,13 +17,14 @@ export function emptyDimensionStats(): DimensionStats {
 
 type Feedback = { correct: boolean; text: string };
 
-function SceneCard({ mission, step }: { mission: Mission; step: Step }) {
+function SceneCard({ lang, mission, step }: { lang: Lang; mission: Mission; step: Step }) {
+  const t = uiStrings[lang].player;
   const stepIndex = mission.steps.indexOf(step);
   return (
-    <div className="scene" role="img" aria-label={`${step.scene.speaker} in the ${step.scene.location.toLowerCase()}`}>
+    <div className="scene" role="img" aria-label={`${step.scene.speaker} — ${step.scene.location.toLowerCase()}`}>
       <div className="scene-header">
-        <span><i className="record-dot" /> {step.scene.location} · SCENE {String(stepIndex + 1).padStart(2, "0")}</span>
-        <span>MISSION {String(mission.number).padStart(2, "0")} · {mission.kicker}</span>
+        <span><i className="record-dot" /> {step.scene.location} · {t.sceneWord} {String(stepIndex + 1).padStart(2, "0")}</span>
+        <span>{t.missionTag} {String(mission.number).padStart(2, "0")} · {mission.kicker}</span>
       </div>
       <div className="scene-grid" aria-hidden="true" />
       <div className="speech-bubble">
@@ -75,14 +77,17 @@ function ChoiceCards({
 }
 
 export function MissionPlayer({
+  lang,
   mission,
   onComplete,
   onExit,
 }: {
+  lang: Lang;
   mission: Mission;
   onComplete: (result: { mistakes: number; stats: DimensionStats }) => void;
   onExit: () => void;
 }) {
+  const t = uiStrings[lang].player;
   const [stepIndex, setStepIndex] = useState(0);
   const [mistakes, setMistakes] = useState(0);
   const [stats, setStats] = useState<DimensionStats>(emptyDimensionStats());
@@ -156,7 +161,7 @@ export function MissionPlayer({
     if (step.kind !== "sort") return;
     const allPlaced = step.items.every((item) => sortPicks[item.id]);
     if (!allPlaced) {
-      setFeedback({ correct: false, text: "Place every item in a lane first, then check your sorting." });
+      setFeedback({ correct: false, text: t.placeAll });
       return;
     }
     const correct = step.items.every((item) => sortPicks[item.id] === item.bucket);
@@ -177,21 +182,21 @@ export function MissionPlayer({
   return (
     <div className="lesson page-enter">
       <div className="lesson-topline">
-        <button className="text-button lesson-exit" type="button" onClick={onExit}>← Course map</button>
-        <span className="lesson-mission-tag">MISSION {String(mission.number).padStart(2, "0")} · {mission.title}</span>
+        <button className="text-button lesson-exit" type="button" onClick={onExit}>{t.courseMap}</button>
+        <span className="lesson-mission-tag">{t.missionTag} {String(mission.number).padStart(2, "0")} · {mission.title}</span>
       </div>
-      <div className="lesson-progress" aria-label={`Mission step ${stepIndex + 1} of ${mission.steps.length}`}>
+      <div className="lesson-progress" aria-label={fmt(t.stepOf, { i: stepIndex + 1, n: mission.steps.length })}>
         {mission.steps.map((item, index) => (
           <div className={index < stepIndex ? "done" : index === stepIndex ? "active" : ""} key={item.id}>
             <span>{index < stepIndex ? "✓" : index + 1}</span><b>{item.label}</b>
           </div>
         ))}
       </div>
-      <SceneCard mission={mission} step={step} />
+      <SceneCard lang={lang} mission={mission} step={step} />
       <section className="challenge comic-box">
         <div className="challenge-heading">
           <span className="caption-label">
-            {step.kind === "lesson" ? "FIELD BRIEFING · NO WRONG ANSWERS HERE" : `CHALLENGE ${stepIndex + 1} OF ${mission.steps.length}`}
+            {step.kind === "lesson" ? t.fieldBriefing : fmt(t.challenge, { i: stepIndex + 1, n: mission.steps.length })}
           </span>
           <h1>{step.title}</h1>
           <p>{step.intro}</p>
@@ -214,9 +219,9 @@ export function MissionPlayer({
                   type="button"
                   onClick={() => setBeatIndex((value) => Math.max(0, value - 1))}
                 >
-                  ← Back
+                  {t.back}
                 </button>
-                <div className="beat-dots" aria-label={`Idea ${beatIndex + 1} of ${step.beats.length}`}>
+                <div className="beat-dots" aria-label={fmt(t.idea, { i: beatIndex + 1, n: step.beats.length })}>
                   {step.beats.map((item, index) => (
                     <i className={index === beatIndex ? "active" : index < beatIndex ? "done" : ""} key={item.title} />
                   ))}
@@ -226,7 +231,7 @@ export function MissionPlayer({
                   type="button"
                   onClick={() => (lastBeat ? advance() : setBeatIndex((value) => value + 1))}
                 >
-                  {lastBeat ? (isLast ? "Finish mission" : "Got it") : "Next idea"} <span>→</span>
+                  {lastBeat ? (isLast ? t.finishMission : t.gotIt) : t.nextIdea} <span>→</span>
                 </button>
               </div>
             </div>
@@ -281,7 +286,7 @@ export function MissionPlayer({
                 </div>
               </div>
             ))}
-            <button className="secondary-button" type="button" onClick={checkSort}>Check my sorting</button>
+            <button className="secondary-button" type="button" onClick={checkSort}>{t.checkSorting}</button>
           </div>
         )}
 
@@ -305,25 +310,25 @@ export function MissionPlayer({
               })}
             </div>
             <div className="builder-preview">
-              <span>PROMPT PREVIEW</span>
+              <span>{t.promptPreview}</span>
               {multiPicks.length ? (
                 <p>
                   {step.parts.filter((part) => multiPicks.includes(part.id)).map((part) => part.text).join(" ")}
                 </p>
               ) : (
-                <p className="builder-empty">Tap ingredients on the left to assemble the prompt.</p>
+                <p className="builder-empty">{t.builderEmpty}</p>
               )}
             </div>
-            <button className="secondary-button" type="button" onClick={checkBuilder}>Test this prompt</button>
+            <button className="secondary-button" type="button" onClick={checkBuilder}>{t.testPrompt}</button>
           </div>
         )}
 
         {feedback && step.kind !== "lesson" && (
           <div className={`feedback ${feedback.correct ? "correct" : "coach"}`} role="status">
             <span>{feedback.correct ? "✓" : "!"}</span>
-            <p><strong>{feedback.correct ? "Cleared for the next step" : "Coaching moment"}</strong>{feedback.text}</p>
+            <p><strong>{feedback.correct ? t.cleared : t.coaching}</strong>{feedback.text}</p>
             {feedback.correct && (
-              <button type="button" onClick={advance}>{isLast ? "Finish mission" : "Next scene"} →</button>
+              <button type="button" onClick={advance}>{isLast ? t.finishMission : t.nextScene} →</button>
             )}
           </div>
         )}

@@ -1,7 +1,8 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { course, courseMinutes } from "./course";
+import { courseMinutes } from "./course";
+import { getCourse, uiStrings, type Lang } from "./i18n";
 
 export type LearnerProfile = {
   name: string;
@@ -11,13 +12,24 @@ export type LearnerProfile = {
   skillLevel: "Beginner" | "Comfortable" | "Advanced";
   goals: string[];
   trustAnswer: string;
+  language: Lang;
 };
-
-const goals = ["Use AI safely at work", "Write better prompts", "Check AI answers", "Understand policy", "Move faster without shortcuts"];
 
 export function Onboarding({ onComplete, onAdmin }: { onComplete: (profile: LearnerProfile) => void; onAdmin: () => void }) {
   const [step, setStep] = useState(0);
-  const [profile, setProfile] = useState<LearnerProfile>({ name: "", email: "", department: "Operations", role: "", skillLevel: "Beginner", goals: [], trustAnswer: "" });
+  const [lang, setLang] = useState<Lang>("en");
+  const [profile, setProfile] = useState<Omit<LearnerProfile, "language">>({
+    name: "",
+    email: "",
+    department: "",
+    role: "",
+    skillLevel: "Beginner",
+    goals: [],
+    trustAnswer: "",
+  });
+
+  const t = uiStrings[lang].onboarding;
+  const missionCount = getCourse(lang).length;
 
   function next(event?: FormEvent) {
     event?.preventDefault();
@@ -25,33 +37,41 @@ export function Onboarding({ onComplete, onAdmin }: { onComplete: (profile: Lear
   }
 
   function toggleGoal(goal: string) {
-    setProfile((current) => ({ ...current, goals: current.goals.includes(goal) ? current.goals.filter((item) => item !== goal) : [...current.goals, goal] }));
+    setProfile((current) => ({
+      ...current,
+      goals: current.goals.includes(goal) ? current.goals.filter((item) => item !== goal) : [...current.goals, goal],
+    }));
   }
 
   return (
     <main className="onboarding-shell">
       <header className="onboarding-header">
-        <div className="brand-lockup onboarding-brand"><span className="brand-keys"><i>⌃</i><i>⌥</i><i>↵</i></span><span><strong>Ctrl+Alt+Learn</strong><small>Human-first AI training</small></span></div>
-        <button className="admin-entry" type="button" onClick={onAdmin}>Admin control room <span>→</span></button>
+        <div className="brand-lockup onboarding-brand"><span className="brand-keys"><i>⌃</i><i>⌥</i><i>↵</i></span><span><strong>Ctrl+Alt+Learn</strong><small>{t.brandTag}</small></span></div>
+        <div className="onboarding-header-actions">
+          <div className="lang-toggle" role="group" aria-label={t.languageLabel}>
+            {(["en", "es"] as const).map((code) => (
+              <button aria-pressed={lang === code} className={lang === code ? "active" : ""} key={code} type="button" onClick={() => setLang(code)}>
+                {code === "en" ? "🇺🇸 English" : "🇲🇽 Español"}
+              </button>
+            ))}
+          </div>
+          <button className="admin-entry" type="button" onClick={onAdmin}>{t.adminEntry} <span>→</span></button>
+        </div>
       </header>
-      <div className="onboarding-progress" aria-label={`Onboarding step ${step + 1} of 4`}><span style={{ width: `${(step + 1) * 25}%` }} /></div>
+      <div className="onboarding-progress" aria-label={`Step ${step + 1} / 4`}><span style={{ width: `${(step + 1) * 25}%` }} /></div>
 
       {step === 0 && <section className="onboarding-hero page-enter">
-        <div className="onboarding-copy"><span className="episode-kicker"><span>WELCOME ABOARD</span><i /> INTRO 101</span><h1>AI training you<br /><em>actually get to play.</em></h1><p>Join Maya and Jordan for {course.length} fast, practical missions about using AI chatbots safely, effectively, and responsibly — at work and beyond.</p><div className="onboarding-facts"><span><b>{courseMinutes} min</b><small>full course</small></span><span><b>{course.length}</b><small>playable missions</small></span><span><b>1</b><small>certificate</small></span></div><button className="primary-button onboarding-start" type="button" onClick={() => next()}>Set up my training <span>→</span></button><small className="onboarding-note">No AI expertise required. Coaching is built into every choice.</small></div>
-        <div className="onboarding-stage" role="img" aria-label="Two coworkers in an aviation operations training studio"><div className="welcome-caption">NEW EPISODE: MEET YOUR AI TEAMMATE</div><div className="welcome-bubble">“Ready to learn what AI can—and cannot—do?”</div><div className="welcome-board"><span>SAFETY</span><span>JUDGMENT</span><span>VERIFY</span><span>PROMPT</span></div><div className="welcome-cast"><i /><i /></div><div className="welcome-desk" /></div>
+        <div className="onboarding-copy"><span className="episode-kicker"><span>{t.kicker}</span><i /> {t.kickerTag}</span><h1>{t.heroTitle1}<br /><em>{t.heroTitle2}</em></h1><p>{t.heroCopy}</p><div className="onboarding-facts"><span><b>{courseMinutes} min</b><small>{t.factMinutes}</small></span><span><b>{missionCount}</b><small>{t.factMissions}</small></span><span><b>1</b><small>{t.factCertificate}</small></span></div><button className="primary-button onboarding-start" type="button" onClick={() => next()}>{t.start} <span>→</span></button><small className="onboarding-note">{t.startNote}</small></div>
+        <div className="onboarding-stage" role="img" aria-label="Two coworkers in an aviation operations training studio"><div className="welcome-caption">{lang === "es" ? "NUEVO EPISODIO: CONOCE A TU COMPAÑERO DE IA" : "NEW EPISODE: MEET YOUR AI TEAMMATE"}</div><div className="welcome-bubble">{lang === "es" ? "“¿Listo para aprender qué puede — y qué no puede — hacer la IA?”" : "“Ready to learn what AI can—and cannot—do?”"}</div><div className="welcome-board"><span>{lang === "es" ? "SEGURIDAD" : "SAFETY"}</span><span>{lang === "es" ? "CRITERIO" : "JUDGMENT"}</span><span>{lang === "es" ? "VERIFICA" : "VERIFY"}</span><span>PROMPT</span></div><div className="welcome-cast"><i /><i /></div><div className="welcome-desk" /></div>
       </section>}
 
-      {step === 1 && <form className="onboarding-card comic-box page-enter" onSubmit={next}><div className="onboarding-card-heading"><span>STEP 1 · YOUR BADGE</span><h1>Who’s joining the crew?</h1><p>This information personalizes your course and completion certificate.</p></div><div className="onboarding-fields"><label><span>Full name</span><input required autoFocus value={profile.name} onChange={(event) => setProfile({ ...profile, name: event.target.value })} placeholder="Your name" /></label><label><span>Work email</span><input required type="email" value={profile.email} onChange={(event) => setProfile({ ...profile, email: event.target.value })} placeholder="you@company.com" /></label><label><span>Team or department</span><input value={profile.department} onChange={(event) => setProfile({ ...profile, department: event.target.value })} placeholder="Operations" /></label><label><span>Role</span><input required value={profile.role} onChange={(event) => setProfile({ ...profile, role: event.target.value })} placeholder="Operations coordinator" /></label></div><div className="onboarding-actions"><button className="back-button" type="button" onClick={() => setStep(0)}>← Back</button><button className="primary-button" type="submit">Next step <span>→</span></button></div></form>}
+      {step === 1 && <form className="onboarding-card comic-box page-enter" onSubmit={next}><div className="onboarding-card-heading"><span>{t.step1Kicker}</span><h1>{t.step1Title}</h1><p>{t.step1Copy}</p></div><div className="onboarding-fields"><label><span>{t.fullName}</span><input required autoFocus value={profile.name} onChange={(event) => setProfile({ ...profile, name: event.target.value })} placeholder={t.namePlaceholder} /></label><label><span>{t.workEmail}</span><input required type="email" value={profile.email} onChange={(event) => setProfile({ ...profile, email: event.target.value })} placeholder="you@company.com" /></label><label><span>{t.team}</span><input value={profile.department} onChange={(event) => setProfile({ ...profile, department: event.target.value })} placeholder={t.teamPlaceholder} /></label><label><span>{t.role}</span><input required value={profile.role} onChange={(event) => setProfile({ ...profile, role: event.target.value })} placeholder={t.rolePlaceholder} /></label></div><div className="onboarding-actions"><button className="back-button" type="button" onClick={() => setStep(0)}>{t.back}</button><button className="primary-button" type="submit">{t.nextStep} <span>→</span></button></div></form>}
 
-      {step === 2 && <section className="onboarding-card comic-box page-enter"><div className="onboarding-card-heading"><span>STEP 2 · YOUR FLIGHT PLAN</span><h1>Meet you at your level.</h1><p>The core safety rules stay consistent; examples and coaching can adapt to your experience.</p></div><fieldset className="level-picker"><legend>How comfortable are you with AI chatbots?</legend>{(["Beginner", "Comfortable", "Advanced"] as const).map((level) => <button aria-pressed={profile.skillLevel === level} key={level} type="button" onClick={() => setProfile({ ...profile, skillLevel: level })}><span>{level === "Beginner" ? "01" : level === "Comfortable" ? "02" : "03"}</span><b>{level}</b><small>{level === "Beginner" ? "I’m learning the basics." : level === "Comfortable" ? "I use chatbots occasionally." : "I use AI in regular workflows."}</small></button>)}</fieldset><fieldset className="goal-picker"><legend>What matters most? <small>Choose any</small></legend>{goals.map((goal) => <button aria-pressed={profile.goals.includes(goal)} key={goal} type="button" onClick={() => toggleGoal(goal)}><span>{profile.goals.includes(goal) ? "✓" : "+"}</span>{goal}</button>)}</fieldset><div className="onboarding-actions"><button className="back-button" type="button" onClick={() => setStep(1)}>← Back</button><button className="primary-button" type="button" onClick={() => next()}>One quick check <span>→</span></button></div></section>}
+      {step === 2 && <section className="onboarding-card comic-box page-enter"><div className="onboarding-card-heading"><span>{t.step2Kicker}</span><h1>{t.step2Title}</h1><p>{t.step2Copy}</p></div><fieldset className="level-picker"><legend>{t.levelLegend}</legend>{(["Beginner", "Comfortable", "Advanced"] as const).map((level, index) => <button aria-pressed={profile.skillLevel === level} key={level} type="button" onClick={() => setProfile({ ...profile, skillLevel: level })}><span>{String(index + 1).padStart(2, "0")}</span><b>{t.levels[level].name}</b><small>{t.levels[level].copy}</small></button>)}</fieldset><fieldset className="goal-picker"><legend>{t.goalsLegend} <small>{t.goalsAny}</small></legend>{t.goals.map((goal) => <button aria-pressed={profile.goals.includes(goal)} key={goal} type="button" onClick={() => toggleGoal(goal)}><span>{profile.goals.includes(goal) ? "✓" : "+"}</span>{goal}</button>)}</fieldset><div className="onboarding-actions"><button className="back-button" type="button" onClick={() => setStep(1)}>{t.back}</button><button className="primary-button" type="button" onClick={() => next()}>{t.oneQuickCheck} <span>→</span></button></div></section>}
 
-      {step === 3 && <section className="onboarding-card diagnostic-card comic-box page-enter"><div className="onboarding-card-heading"><span>STEP 3 · TRUST CHECK</span><h1>A chatbot gives you a polished answer. What now?</h1><p>There is no penalty—this helps establish your starting point.</p></div><div className="diagnostic-options">{[
-        ["trust", "Use it", "It sounds confident, so it is probably correct."],
-        ["verify", "Check it", "Compare important claims with a trusted source."],
-        ["avoid", "Never use AI", "Chatbots are too risky for any workplace task."],
-      ].map(([id, title, copy], index) => <button aria-pressed={profile.trustAnswer === id} key={id} type="button" onClick={() => setProfile({ ...profile, trustAnswer: id })}><span>{String.fromCharCode(65 + index)}</span><b>{title}</b><small>{copy}</small></button>)}</div>{profile.trustAnswer && <div className={`diagnostic-feedback ${profile.trustAnswer === "verify" ? "correct" : ""}`}><span>{profile.trustAnswer === "verify" ? "✓" : "✦"}</span><p><strong>{profile.trustAnswer === "verify" ? "Good instinct." : "That’s exactly why we practice."}</strong>{profile.trustAnswer === "verify" ? " Verification should match the impact of the answer." : " AI can be useful, but confidence is not proof. The course will show you when and how to verify."}</p></div>}<div className="onboarding-actions"><button className="back-button" type="button" onClick={() => setStep(2)}>← Back</button><button className="primary-button" disabled={!profile.trustAnswer} type="button" onClick={() => onComplete(profile)}>Enter the course <span>→</span></button></div></section>}
+      {step === 3 && <section className="onboarding-card diagnostic-card comic-box page-enter"><div className="onboarding-card-heading"><span>{t.step3Kicker}</span><h1>{t.step3Title}</h1><p>{t.step3Copy}</p></div><div className="diagnostic-options">{t.trustOptions.map((option, index) => <button aria-pressed={profile.trustAnswer === option.id} key={option.id} type="button" onClick={() => setProfile({ ...profile, trustAnswer: option.id })}><span>{String.fromCharCode(65 + index)}</span><b>{option.title}</b><small>{option.copy}</small></button>)}</div>{profile.trustAnswer && <div className={`diagnostic-feedback ${profile.trustAnswer === "verify" ? "correct" : ""}`}><span>{profile.trustAnswer === "verify" ? "✓" : "✦"}</span><p><strong>{profile.trustAnswer === "verify" ? t.trustGood : t.trustOther}</strong>{profile.trustAnswer === "verify" ? t.trustGoodCopy : t.trustOtherCopy}</p></div>}<div className="onboarding-actions"><button className="back-button" type="button" onClick={() => setStep(2)}>{t.back}</button><button className="primary-button" disabled={!profile.trustAnswer} type="button" onClick={() => onComplete({ ...profile, language: lang })}>{t.enterCourse} <span>→</span></button></div></section>}
 
-      <footer className="onboarding-footer"><span>Aviation Operations Edition · {course.length} missions · {courseMinutes} minutes</span><span>Progress is saved after onboarding.</span></footer>
+      <footer className="onboarding-footer"><span>{t.footerLeft} · {missionCount} {t.factMissions} · {courseMinutes} min</span><span>{t.footerRight}</span></footer>
     </main>
   );
 }
