@@ -1,4 +1,4 @@
-# Ctrl+Alt+Learn — Product Brief (Draft 0.3)
+# Ctrl+Alt+Learn: Product Brief (Draft 0.3)
 
 ## Product idea
 
@@ -56,10 +56,10 @@ After Intro 101, a learner should be able to:
 
 Recommended scoring dimensions:
 
-- **Safety** — protected data and avoided harmful use.
-- **Judgment** — chose the right tool and level of human oversight.
-- **Verification** — checked facts, sources, calculations, and assumptions.
-- **Prompt craft** — gave sufficient context, constraints, and success criteria.
+- **Safety**: protected data and avoided harmful use.
+- **Judgment**: chose the right tool and level of human oversight.
+- **Verification**: checked facts, sources, calculations, and assumptions.
+- **Prompt craft**: gave sufficient context, constraints, and success criteria.
 
 ## Intro 101 course outline
 
@@ -76,40 +76,40 @@ Recommended scoring dimensions:
 | Final scenario and results | 5 minutes |
 | **Total target** | **29 minutes** |
 
-### Mission 0 — Welcome to the AI Arcade
+### Mission 0: Welcome to the AI Arcade
 
 - What the course is and is not.
 - Quick diagnostic: “What would you trust a chatbot to do?”
 - Introduce the guide character and the four scoring dimensions.
 
-### Mission 1 — What Is AI?
+### Mission 1: What Is AI?
 
 - AI, machine learning, generative AI, and large language models in plain language.
 - Pattern prediction versus human understanding.
 - Why fluent output can still be wrong.
 - Activity: sort familiar products and features into “AI,” “automation,” or “not enough information.”
 
-### Mission 2 — Meet the Chatbot
+### Mission 2: Meet the Chatbot
 
 - What chatbots do and how a conversation provides context.
 - Similarities and differences among ChatGPT, Claude, and Copilot without turning the lesson into a product comparison.
 - Common uses: brainstorming, summarizing, explaining, drafting, transforming, and coding.
 - Activity: choose the best tool for several tasks, including “do not use AI.”
 
-### Mission 3 — Superpowers and Limits
+### Mission 3: Superpowers and Limits
 
 - Speed, scale, ideation, translation, and personalization.
 - Hallucinations, stale or incomplete knowledge, bias, weak reasoning, and false confidence.
 - Activity: inspect three polished outputs and find the one that needs verification.
 
-### Mission 4 — The Data Safety Checkpoint
+### Mission 4: The Data Safety Checkpoint
 
 - Public, internal, confidential, personal, regulated, and secret information.
 - Why pasting data into an unapproved tool can create risk.
 - Redaction, approved tools, minimum necessary data, and secure alternatives.
 - Activity: edit a risky prompt before it is sent.
 
-### Mission 5 — Work Mode
+### Mission 5: Work Mode
 
 - Appropriate workplace uses and prohibited or high-risk uses.
 - Human accountability and review.
@@ -117,28 +117,28 @@ Recommended scoring dimensions:
 - Organization policy versus law versus best practice.
 - Activity: navigate a manager request that pressures the learner to skip safeguards.
 
-### Mission 6 — Life Mode
+### Mission 6: Life Mode
 
 - Everyday planning, learning, creativity, and accessibility uses.
 - Extra caution for medical, legal, financial, crisis, identity, and relationship advice.
 - Scams, impersonation, misinformation, and emotional over-reliance.
 - Activity: decide when to verify, seek a professional, or avoid the chatbot.
 
-### Mission 7 — Prompting Basics
+### Mission 7: Prompting Basics
 
 - Goal, context, relevant inputs, constraints, desired format, and examples.
 - Iteration and follow-up questions.
 - Asking for uncertainty, assumptions, and checks.
 - Activity: repair a vague prompt in a guided prompt builder.
 
-### Mission 8 — Trust but Verify
+### Mission 8: Trust but Verify
 
 - Verification proportional to impact.
 - Source checking, independent calculation, comparison, and subject-matter review.
 - Detecting unsupported citations and fabricated details.
 - Activity: approve, revise, or reject an AI-generated workplace deliverable.
 
-### Final Mission — The Human-in-the-Loop Challenge
+### Final Mission: The Human-in-the-Loop Challenge
 
 - Multi-scene simulation combining tool choice, privacy, prompting, verification, and escalation.
 - Personalized feedback by scoring dimension.
@@ -148,9 +148,9 @@ Recommended scoring dimensions:
 
 The course will label guidance in three layers so learners do not confuse them:
 
-1. **Law or regulation** — a requirement tied to a named authority and applicable context.
-2. **Organization policy** — the employer's approved tools, data rules, review steps, and prohibited uses.
-3. **Best practice** — a recommended safeguard such as minimizing data, verifying outputs, documenting review, or escalating high-impact decisions.
+1. **Law or regulation**: a requirement tied to a named authority and applicable context.
+2. **Organization policy**: the employer's approved tools, data rules, review steps, and prohibited uses.
+3. **Best practice**: a recommended safeguard such as minimizing data, verifying outputs, documenting review, or escalating high-impact decisions.
 
 The cross-industry layer should address privacy, cybersecurity, employment decisions, discrimination, intellectual property, records, deceptive content, human oversight, and high-impact decisions. The aviation layer should use operationally realistic scenarios while clearly separating safety-critical and regulated workflows from low-risk administrative uses.
 

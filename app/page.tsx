@@ -203,7 +203,7 @@ function MasteryPanel({ lang, progress, missionCount }: { lang: Lang; progress: 
         const value = attempts ? Math.round((firstTryCorrect / attempts) * 100) : 0;
         return (
           <div className="mastery-row" key={dim}>
-            <span><b>{t.dimensions[dim]}</b><b>{attempts ? `${value}%` : "—"}</b></span>
+            <span><b>{t.dimensions[dim]}</b><b>{attempts ? `${value}%` : "-"}</b></span>
             <i><b className={colors[dim]} style={{ width: `${attempts ? Math.max(value, 6) : 0}%` }} /></i>
           </div>
         );
@@ -215,7 +215,7 @@ function MasteryPanel({ lang, progress, missionCount }: { lang: Lang; progress: 
             const earned = Boolean(progress.badges?.[badge.id]);
             const meta = t.game.badges[badge.id];
             return (
-              <span className={`trophy ${earned ? "earned" : "locked"}`} key={badge.id} title={`${meta.name} — ${meta.desc}`}>
+              <span className={`trophy ${earned ? "earned" : "locked"}`} key={badge.id} title={`${meta.name}: ${meta.desc}`}>
                 {badge.icon}
               </span>
             );
@@ -731,7 +731,7 @@ export default function Home() {
           <p>{t.certificate.completed}</p>
           <h2>{t.certificate.courseName}</h2>
           <h3>{fmt(t.certificate.subtitle, { n: course.length })}</h3>
-          <div className="certificate-meta"><span><small>{t.certificate.dateLabel}</small>{new Intl.DateTimeFormat(lang === "es" ? "es-US" : "en-US", { dateStyle: "long" }).format(progress.courseCompletedAt ? new Date(progress.courseCompletedAt) : new Date())}</span><span><small>{t.certificate.masteryLabel}</small>{score}%</span><span><small>{t.certificate.idLabel}</small>{progress.certificateId || "—"}</span></div>
+          <div className="certificate-meta"><span><small>{t.certificate.dateLabel}</small>{new Intl.DateTimeFormat(lang === "es" ? "es-US" : "en-US", { dateStyle: "long" }).format(progress.courseCompletedAt ? new Date(progress.courseCompletedAt) : new Date())}</span><span><small>{t.certificate.masteryLabel}</small>{score}%</span><span><small>{t.certificate.idLabel}</small>{progress.certificateId || "-"}</span></div>
           <div className="certificate-rule">{t.certificate.rule}</div>
         </div>
       </section>

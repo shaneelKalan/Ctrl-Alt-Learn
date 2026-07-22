@@ -33,7 +33,7 @@ const en = {
     heroTitle1: "AI training you",
     heroTitle2: "actually get to play.",
     heroCopy:
-      "Join Maya and Jordan for 8 fast, practical missions about using AI chatbots safely, effectively, and responsibly — at work and beyond.",
+      "Join Maya and Jordan for 8 fast, practical missions about using AI chatbots safely, effectively, and responsibly: at work and beyond.",
     factMinutes: "full course",
     factMissions: "playable missions",
     factCertificate: "certificate",
@@ -73,7 +73,7 @@ const en = {
     oneQuickCheck: "One quick check",
     step3Kicker: "STEP 3 · TRUST CHECK",
     step3Title: "A chatbot gives you a polished answer. What now?",
-    step3Copy: "There is no penalty — this helps establish your starting point.",
+    step3Copy: "There is no penalty: this helps establish your starting point.",
     trustOptions: [
       { id: "trust", title: "Use it", copy: "It sounds confident, so it is probably correct." },
       { id: "verify", title: "Check it", copy: "Compare important claims with a trusted source." },
@@ -100,7 +100,7 @@ const en = {
     videoLibrary: "Video Library",
     videoTag: "Watch with voiceover",
     progress: "Course progress",
-    progressDone: "Course complete — certificate unlocked",
+    progressDone: "Course complete: certificate unlocked",
     progressNote: "minutes of playable training",
   },
   videos: {
@@ -214,7 +214,7 @@ const en = {
   results: {
     kicker: "COURSE COMPLETE",
     title: "Nice work, crew member.",
-    copy: "You finished all {n} missions of AI Chatbots: Intro 101 — tool choice, data safety, prompting, verification, and knowing when a human takes over.",
+    copy: "You finished all {n} missions of AI Chatbots: Intro 101: tool choice, data safety, prompting, verification, and knowing when a human takes over.",
     yourResult: "YOUR RESULT",
     cleared: "Intro 101: Cleared",
     clearedCopy: "{n} missions · {m} minutes of scenario training completed.",
@@ -235,7 +235,7 @@ const en = {
     kickerTag: "REFERENCE, NOT HOMEWORK",
     title1: "Steal these.",
     title2: "That's what they're for.",
-    copy: "Every formula, rule, and red-flag list from the course on one page. Nothing to memorize — just come back whenever you need it.",
+    copy: "Every formula, rule, and red-flag list from the course on one page. Nothing to memorize: just come back whenever you need it.",
     back: "Back to course map",
   },
   certificate: {
@@ -304,7 +304,7 @@ const es: typeof en = {
     heroTitle1: "Formación en IA que",
     heroTitle2: "de verdad se juega.",
     heroCopy:
-      "Acompaña a Maya y Jordan en 8 misiones rápidas y prácticas sobre cómo usar chatbots de IA de forma segura, eficaz y responsable — en el trabajo y fuera de él.",
+      "Acompaña a Maya y Jordan en 8 misiones rápidas y prácticas sobre cómo usar chatbots de IA de forma segura, eficaz y responsable: en el trabajo y fuera de él.",
     factMinutes: "curso completo",
     factMissions: "misiones jugables",
     factCertificate: "certificado",
@@ -344,7 +344,7 @@ const es: typeof en = {
     oneQuickCheck: "Una comprobación rápida",
     step3Kicker: "PASO 3 · PRUEBA DE CONFIANZA",
     step3Title: "Un chatbot te da una respuesta impecable. ¿Y ahora?",
-    step3Copy: "No hay penalización — esto solo establece tu punto de partida.",
+    step3Copy: "No hay penalización: esto solo establece tu punto de partida.",
     trustOptions: [
       { id: "trust", title: "Usarla", copy: "Suena segura, así que probablemente es correcta." },
       { id: "verify", title: "Verificarla", copy: "Comparar los datos importantes con una fuente confiable." },
@@ -371,7 +371,7 @@ const es: typeof en = {
     videoLibrary: "Videoteca",
     videoTag: "Míralo con narración",
     progress: "Progreso del curso",
-    progressDone: "Curso completo — certificado desbloqueado",
+    progressDone: "Curso completo: certificado desbloqueado",
     progressNote: "minutos de formación jugable",
   },
   videos: {
@@ -485,7 +485,7 @@ const es: typeof en = {
   results: {
     kicker: "CURSO COMPLETO",
     title: "Buen trabajo, tripulante.",
-    copy: "Terminaste las {n} misiones de Chatbots de IA: Intro 101 — elección de herramienta, seguridad de datos, prompts, verificación y saber cuándo toma el mando una persona.",
+    copy: "Terminaste las {n} misiones de Chatbots de IA: Intro 101: elección de herramienta, seguridad de datos, prompts, verificación y saber cuándo toma el mando una persona.",
     yourResult: "TU RESULTADO",
     cleared: "Intro 101: Superado",
     clearedCopy: "{n} misiones · {m} minutos de formación con escenarios completados.",
@@ -506,7 +506,7 @@ const es: typeof en = {
     kickerTag: "REFERENCIA, NO TAREA",
     title1: "Róbate estas fórmulas.",
     title2: "Para eso están.",
-    copy: "Todas las fórmulas, reglas y señales de alerta del curso en una sola página. Nada que memorizar — vuelve cuando lo necesites.",
+    copy: "Todas las fórmulas, reglas y señales de alerta del curso en una sola página. Nada que memorizar: vuelve cuando lo necesites.",
     back: "Volver al mapa del curso",
   },
   certificate: {

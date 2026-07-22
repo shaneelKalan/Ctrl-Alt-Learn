@@ -31,7 +31,7 @@ export const videoLibrary: VideoLesson[] = [
         visual: "title",
         narration:
           "Welcome to Ctrl+Alt+Learn. In the next few minutes, we're going to demystify the most talked-about technology of our time: artificial intelligence. No jargon. No hype. Just what you actually need to know.",
-        caption: "Intro to AI — no jargon, no hype",
+        caption: "Intro to AI: no jargon, no hype",
         seconds: 18,
       },
       {
@@ -46,23 +46,23 @@ export const videoLibrary: VideoLesson[] = [
         id: "predict",
         visual: "predict",
         narration:
-          "At its heart, modern AI is a prediction machine. It was trained on an enormous amount of text — books, articles, and websites — and it learned the patterns in how humans write. So when you ask it something, it isn't looking up a fact in a database. It's predicting, one word at a time, what should come next.",
-        caption: "AI predicts the next word — it doesn't look up facts",
+          "At its heart, modern AI is a prediction machine. It was trained on an enormous amount of text (books, articles, and websites), and it learned the patterns in how humans write. So when you ask it something, it isn't looking up a fact in a database. It's predicting, one word at a time, what should come next.",
+        caption: "AI predicts the next word: it doesn't look up facts",
         seconds: 27,
       },
       {
         id: "autocomplete",
         visual: "autocomplete",
         narration:
-          "You've actually used a tiny version of this for years. It's the autocomplete on your phone. Type 'I'll be there in five' and your phone suggests 'minutes.' AI is that same idea, but supercharged — able to predict entire paragraphs, emails, even working computer code.",
-        caption: "It's autocomplete — supercharged",
+          "You've actually used a tiny version of this for years. It's the autocomplete on your phone. Type 'I'll be there in five' and your phone suggests 'minutes.' AI is that same idea, but supercharged: able to predict entire paragraphs, emails, even working computer code.",
+        caption: "It's autocomplete: supercharged",
         seconds: 22,
       },
       {
         id: "chatbot",
         visual: "chatbot",
         narration:
-          "The engine behind all of this has a name: a large language model, or L-L-M. When you wrap that engine in a chat window — like Microsoft Copilot — you get a chatbot. It remembers your current conversation, which is what makes it feel like you're really talking with it.",
+          "The engine behind all of this has a name: a large language model, or L-L-M. When you wrap that engine in a chat window, like Microsoft Copilot, you get a chatbot. It remembers your current conversation, which is what makes it feel like you're really talking with it.",
         caption: "LLM + chat window = chatbot",
         seconds: 24,
       },
@@ -78,7 +78,7 @@ export const videoLibrary: VideoLesson[] = [
         id: "superpowers",
         visual: "superpowers",
         narration:
-          "So what is it genuinely great at? Three things, mostly. It can summarize — turning a long report into a few clear bullets. It can draft — turning your rough notes into a polished email. And it can explain — breaking down any topic, at any level, with endless patience. Used well, that's a real superpower for everyday work.",
+          "So what is it genuinely great at? Three things, mostly. It can summarize: turning a long report into a few clear bullets. It can draft: turning your rough notes into a polished email. And it can explain: breaking down any topic, at any level, with endless patience. Used well, that's a real superpower for everyday work.",
         caption: "Great at: summarizing, drafting, explaining",
         seconds: 27,
       },
@@ -87,7 +87,7 @@ export const videoLibrary: VideoLesson[] = [
         visual: "hallucination",
         narration:
           "But there's a catch, and it's the most important thing in this whole video. Because AI predicts what sounds right, it can sometimes produce things that sound completely convincing and are completely wrong. It can invent facts, make up statistics, even cite studies that don't exist. This is called a hallucination.",
-        caption: "The catch: AI can 'hallucinate' — sound right, be wrong",
+        caption: "The catch: AI can 'hallucinate' and sound convincing",
         seconds: 26,
       },
       {
@@ -102,15 +102,15 @@ export const videoLibrary: VideoLesson[] = [
         id: "context",
         visual: "context",
         narration:
-          "There's one more limit worth knowing. The AI doesn't know your world. It doesn't know your company's policies, your customers, or what happened this morning — unless you tell it. And when it doesn't know, it often fills the gap with a confident guess.",
-        caption: "It doesn't know YOUR world — unless you tell it",
+          "There's one more limit worth knowing. The AI doesn't know your world. It doesn't know your company's policies, your customers, or what happened this morning: unless you tell it. And when it doesn't know, it often fills the gap with a confident guess.",
+        caption: "It doesn't know YOUR world: unless you tell it",
         seconds: 21,
       },
       {
         id: "goldenrule",
         visual: "goldenrule",
         narration:
-          "So how do we use it safely? One golden rule ties everything together: AI is an advisor, not a decision maker. Let it draft, summarize, and suggest — that's where it shines. But a human being always reviews the result and makes the final call. Every single time.",
+          "So how do we use it safely? One golden rule ties everything together: AI is an advisor, not a decision maker. Let it draft, summarize, and suggest: that's where it shines. But a human being always reviews the result and makes the final call. Every single time.",
         caption: "The golden rule: AI advises, humans decide",
         seconds: 22,
       },
@@ -118,10 +118,10 @@ export const videoLibrary: VideoLesson[] = [
         id: "recap",
         visual: "recap",
         narration:
-          "Let's bring it home. AI is a prediction machine — fast, powerful, and genuinely useful. But it can be confidently wrong, it doesn't know your world, and it should never make the final decision alone. Keep those three things in mind, and you're already ahead of most people using it. Ready to practice? Your first mission is waiting.",
-        caption: "You're ready — let's practice",
+          "Let's bring it home. AI is a prediction machine: fast, powerful, and genuinely useful. But it can be confidently wrong, it doesn't know your world, and it should never make the final decision alone. Keep those three things in mind, and you're already ahead of most people using it. Ready to practice? Your first mission is waiting.",
+        caption: "You're ready: let's practice",
         seconds: 27,
-        recapItems: ["Predicts — can be confidently wrong", "Doesn't know your world", "Never decides alone"],
+        recapItems: ["Predicts: can be confidently wrong", "Doesn't know your world", "Never decides alone"],
       },
     ],
   },
@@ -129,7 +129,7 @@ export const videoLibrary: VideoLesson[] = [
     id: "copilot-safe-tool",
     number: 2,
     title: "Copilot: Your Safe Tool",
-    subtitle: "Why Microsoft Copilot is DASI's approved AI — and the rule that goes with it",
+    subtitle: "Why Microsoft Copilot is DASI's approved AI, and the rule that goes with it",
     minutes: "~5 min",
     scenes: [
       {
@@ -144,8 +144,8 @@ export const videoLibrary: VideoLesson[] = [
         id: "question",
         visual: "question",
         narration:
-          "There are dozens of AI chatbots out there — ChatGPT, Claude, Gemini, and more. They can all look and feel similar. So when there's work to do, which one should you actually open? At DASI, the answer is already decided for you.",
-        caption: "So many AI tools — which one for work?",
+          "There are dozens of AI chatbots out there: ChatGPT, Claude, Gemini, and more. They can all look and feel similar. So when there's work to do, which one should you actually open? At DASI, the answer is already decided for you.",
+        caption: "So many AI tools, which one for work?",
         seconds: 21,
       },
       {
@@ -153,7 +153,7 @@ export const videoLibrary: VideoLesson[] = [
         visual: "copilot",
         narration:
           "It's Microsoft Copilot. Copilot is DASI's approved AI assistant, and it's built right into the Microsoft tools you already use every day. When you use Copilot at work, you're using the tool the company has chosen and protected.",
-        caption: "Meet Microsoft Copilot — our approved tool",
+        caption: "Meet Microsoft Copilot: our approved tool",
         seconds: 21,
       },
       {
@@ -168,7 +168,7 @@ export const videoLibrary: VideoLesson[] = [
         id: "two-chats",
         visual: "two-chats",
         narration:
-          "Now compare that to a free chatbot or a personal account. It might look like the exact same chat box. But it doesn't have DASI's agreement behind it. The data rules are different, and your work information could end up somewhere it shouldn't. Same box — very different protection.",
+          "Now compare that to a free chatbot or a personal account. It might look like the exact same chat box. But it doesn't have DASI's agreement behind it. The data rules are different, and your work information could end up somewhere it shouldn't. Same box: very different protection.",
         caption: "Same-looking chat box, very different rules",
         seconds: 24,
       },
@@ -177,7 +177,7 @@ export const videoLibrary: VideoLesson[] = [
         visual: "copilot",
         narration:
           "And to be clear, this isn't about one AI being smart and another being bad. The other tools aren't the enemy. It's about which tool is contractually protected for DASI's data. Copilot is the one that's approved and inside our guardrails, so that's the one we use for work.",
-        caption: "Not about good or bad — about approved",
+        caption: "Not about good or bad: about approved",
         seconds: 23,
       },
       {
@@ -185,22 +185,22 @@ export const videoLibrary: VideoLesson[] = [
         visual: "two-chats",
         narration:
           "So here's the rule, and it's the heart of this whole video. For work, use Copilot. Don't use ChatGPT, Claude, or any other AI tool for company work unless it has been explicitly approved. When it comes to DASI data: approved tools only.",
-        caption: "The rule: Copilot for work — others need approval",
+        caption: "The rule: Copilot for work: others need approval",
         seconds: 23,
       },
       {
         id: "superpowers",
         visual: "superpowers",
         narration:
-          "The good news? You lose nothing. Copilot does all the things you'd want from AI — it summarizes long documents, drafts your emails, and explains tricky topics — just on work content, safely, inside the guardrails.",
-        caption: "Copilot does the same superpowers — safely",
+          "The good news? You lose nothing. Copilot does everything you'd want from AI: it summarizes long documents, drafts your emails, and explains tricky topics. It just does it on work content, safely, inside the guardrails.",
+        caption: "Copilot does the same superpowers: safely",
         seconds: 20,
       },
       {
         id: "ask",
         visual: "question",
         narration:
-          "And if you ever think a different tool would genuinely help, you don't have to give up on it. Just ask before you use it. Getting something approved is usually a quick conversation with your manager or I-T — not a dead end.",
+          "And if you ever think a different tool would genuinely help, you don't have to give up on it. Just ask before you use it. Getting something approved is usually a quick conversation with your manager or I-T: not a dead end.",
         caption: "Need another tool? Just ask first",
         seconds: 21,
       },
@@ -219,14 +219,14 @@ export const videoLibrary: VideoLesson[] = [
     id: "work-vs-personal",
     number: 3,
     title: "Work Account, Personal Account",
-    subtitle: "Keep work data in the work tool — and keep the guardrails on",
+    subtitle: "Keep work data in the work tool, and keep the guardrails on",
     minutes: "~5 min",
     scenes: [
       {
         id: "title",
         visual: "title",
         narration:
-          "You probably have more than one way to reach AI — one at work, and one at home. Keeping them straight is one of the most important safety habits there is. Let's make it easy.",
+          "You probably have more than one way to reach AI: one at work, and one at home. Keeping them straight is one of the most important safety habits there is. Let's make it easy.",
         caption: "Work account, personal account",
         seconds: 18,
       },
@@ -234,7 +234,7 @@ export const videoLibrary: VideoLesson[] = [
         id: "two-accounts",
         visual: "two-accounts",
         narration:
-          "Think of it as two separate worlds. There's your DASI work account — the one you sign into with your company login. And there are your personal accounts — your own email, your own subscriptions, at home. They may both have AI, but they are not the same.",
+          "Think of it as two separate worlds. There's your DASI work account, the one you sign into with your company login. And there are your personal accounts, your own email, your own subscriptions, at home. They may both have AI, but they are not the same.",
         caption: "You live in two AI worlds",
         seconds: 24,
       },
@@ -242,7 +242,7 @@ export const videoLibrary: VideoLesson[] = [
         id: "guardrails",
         visual: "guardrails",
         narration:
-          "When you sign into Copilot with your DASI account, you step inside the company's protections. This is where work belongs. Your work data is meant to live here — in the approved tool, on the work account.",
+          "When you sign into Copilot with your DASI account, you step inside the company's protections. This is where work belongs. Your work data is meant to live here: in the approved tool, on the work account.",
         caption: "Work account = inside DASI's protections",
         seconds: 21,
       },
@@ -250,7 +250,7 @@ export const videoLibrary: VideoLesson[] = [
         id: "personal-safe",
         visual: "personal-safe",
         narration:
-          "Your personal accounts are a different story. Free chatbots, your own logins, your phone at home. They're fantastic for your personal life — planning a trip, a recipe, learning a hobby. But they don't have any of DASI's protections.",
+          "Your personal accounts are a different story. Free chatbots, your own logins, your phone at home. They're fantastic for your personal life: planning a trip, a recipe, learning a hobby. But they don't have any of DASI's protections.",
         caption: "Personal accounts = great for your life",
         seconds: 22,
       },
@@ -267,15 +267,15 @@ export const videoLibrary: VideoLesson[] = [
         visual: "chatbot",
         narration:
           "And it usually starts innocently. 'I'll just finish this at home in my personal chatbot.' It feels harmless. But that one paste takes company data outside every protection we have. However tempting the shortcut, keep work data in the work account.",
-        caption: "The tempting shortcut — don't take it",
+        caption: "The tempting shortcut: don't take it",
         seconds: 23,
       },
       {
         id: "personal-free",
         visual: "personal-safe",
         narration:
-          "The flip side is freeing. In your personal life, use whatever AI you like — nobody's stopping you. The only line is this: never put DASI's confidential or customer data into a personal account. Your life, your tools. Work data, work tools.",
-        caption: "At home, use AI freely — just not with work data",
+          "The flip side is freeing. In your personal life, use whatever AI you like: nobody's stopping you. The only line is this: never put DASI's confidential or customer data into a personal account. Your life, your tools. Work data, work tools.",
+        caption: "At home, use AI freely: just not with work data",
         seconds: 22,
       },
       {
@@ -309,7 +309,7 @@ export const videoLibrary: VideoLesson[] = [
         id: "title",
         visual: "title",
         narration:
-          "Let's put it all together into one simple playbook you can carry into any workday — when and how to reach for AI at DASI, in a few clear moves.",
+          "Let's put it all together into one simple playbook you can carry into any workday: when and how to reach for AI at DASI, in a few clear moves.",
         caption: "The DASI AI Playbook",
         seconds: 16,
       },
@@ -333,7 +333,7 @@ export const videoLibrary: VideoLesson[] = [
         id: "green",
         visual: "superpowers",
         narration:
-          "Green light — go. Brainstorming ideas, drafting content you'll review, and summarizing internal, non-sensitive work. These are everyday wins in Copilot. Use it freely, and give the result a quick read before you rely on it.",
+          "Green light: go. Brainstorming ideas, drafting content you'll review, and summarizing internal, non-sensitive work. These are everyday wins in Copilot. Use it freely, and give the result a quick read before you rely on it.",
         caption: "Green: brainstorm, draft, summarize",
         seconds: 21,
       },
@@ -341,7 +341,7 @@ export const videoLibrary: VideoLesson[] = [
         id: "yellow",
         visual: "goldenrule",
         narration:
-          "Yellow light — go, then review. Anything a customer will see, or a colleague will rely on. Let Copilot draft it fast, but a qualified person always reviews it before it goes out. AI drafts; humans approve.",
+          "Yellow light: go, then review. Anything a customer will see, or a colleague will rely on. Let Copilot draft it fast, but a qualified person always reviews it before it goes out. AI drafts; humans approve.",
         caption: "Yellow: a human reviews before it ships",
         seconds: 20,
       },
@@ -349,7 +349,7 @@ export const videoLibrary: VideoLesson[] = [
         id: "red",
         visual: "stop",
         narration:
-          "Red light — stop. Confidential, regulated, or safety-sensitive data. Or wanting to use a tool that isn't approved. Or letting AI make a final call about people or safety. In the red lane, you stop, and you ask before you act.",
+          "Red light: stop. Confidential, regulated, or safety-sensitive data. Or wanting to use a tool that isn't approved. Or letting AI make a final call about people or safety. In the red lane, you stop, and you ask before you act.",
         caption: "Red: stop and ask first",
         seconds: 22,
       },
@@ -358,17 +358,17 @@ export const videoLibrary: VideoLesson[] = [
         visual: "crossstreams",
         narration:
           "And a few hard nos worth memorizing. Never put work data into a personal account. Never use an unapproved tool for company work. And never let AI make the final decision on something that affects people or safety. Those lines don't move.",
-        caption: "The hard nos — never do these",
+        caption: "The hard nos: never do these",
         seconds: 22,
       },
       {
         id: "recap",
         visual: "recap",
         narration:
-          "That's the whole playbook. For work, Copilot first. Keep work data in your work account. Verify what matters. And when you're unsure, ask — one question beats one incident. You're ready. Go put it to work.",
+          "That's the whole playbook. For work, Copilot first. Keep work data in your work account. Verify what matters. And when you're unsure, ask: one question beats one incident. You're ready. Go put it to work.",
         caption: "Copilot first. Verify. Ask when unsure.",
         seconds: 21,
-        recapItems: ["Copilot first, for work", "Work account for work data", "Verify — then ask if unsure"],
+        recapItems: ["Copilot first, for work", "Work account for work data", "Verify: then ask if unsure"],
       },
     ],
   },

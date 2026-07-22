@@ -214,7 +214,7 @@ function Overview({ data, assignedCount, completionRate, averageScore, setTab }:
       <article><span>ACTIVE LEARNERS</span><strong>{data.learners.length}</strong><small>{data.learners.length ? "Ready for training" : "Add your first learner"}</small></article>
       <article><span>OPEN ASSIGNMENTS</span><strong>{assignedCount}</strong><small>{data.assignments.length} total assigned</small></article>
       <article><span>COMPLETION RATE</span><strong>{completionRate}%</strong><i><b style={{ width: `${completionRate}%` }} /></i></article>
-      <article><span>AVERAGE SCORE</span><strong>{averageScore || "—"}</strong><small>{data.completions.length ? "Across completions" : "Waiting for results"}</small></article>
+      <article><span>AVERAGE SCORE</span><strong>{averageScore || "-"}</strong><small>{data.completions.length ? "Across completions" : "Waiting for results"}</small></article>
     </div>
     <div className="admin-overview-grid">
       <section className="admin-panel"><div className="admin-panel-title"><div><span>RECENT ACTIVITY</span><h2>Assignments</h2></div><button onClick={() => setTab("assignments")} type="button">View all →</button></div>
@@ -267,7 +267,7 @@ function Reports({ data, averageScore }: { data: AdminData; averageScore: number
   }
   return <>
     <PageHeading eyebrow="REPORTS" title="Completion and mastery" copy="Review results and export a simple completion record for your pilot." action={<button className="secondary-button" disabled={!data.completions.length} onClick={exportCsv} type="button">Export CSV ↗</button>} />
-    <div className="report-metrics"><article><span>COMPLETIONS</span><strong>{data.completions.length}</strong></article><article><span>AVERAGE SCORE</span><strong>{averageScore || "—"}</strong></article><article><span>CERTIFICATES</span><strong>{data.completions.length}</strong></article></div>
+    <div className="report-metrics"><article><span>COMPLETIONS</span><strong>{data.completions.length}</strong></article><article><span>AVERAGE SCORE</span><strong>{averageScore || "-"}</strong></article><article><span>CERTIFICATES</span><strong>{data.completions.length}</strong></article></div>
     <section className="admin-panel table-panel">{data.completions.length ? <div className="admin-table report-table"><div className="table-row table-head"><span>Learner</span><span>Completed</span><span>Score</span><span>Certificate</span></div>{data.completions.map((item) => <div className="table-row" key={item.id}><span><b>{item.learnerName}</b><small>{item.learnerEmail}</small></span><span>{new Date(item.completedAt).toLocaleDateString()}</span><span><b className="score-pill">{item.score}%</b></span><span><code>{item.certificateId}</code></span></div>)}</div> : <EmptyState title="No completions yet" copy="Results will appear here when a learner finishes the playable mission." />}</section>
   </>;
 }
