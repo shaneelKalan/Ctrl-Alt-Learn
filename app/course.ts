@@ -94,6 +94,21 @@ export type Mission = {
   steps: Step[];
 };
 
+export type Course = {
+  id: string;
+  number: number;
+  code: string;
+  level: string;
+  title: string;
+  tagline: string;
+  minutes: number;
+  missions: Mission[];
+};
+
+export function sumMinutes(missions: Mission[]) {
+  return missions.reduce((total, mission) => total + mission.minutes, 0);
+}
+
 const opsDesk = "HELP DESK STUDIO";
 const breakRoom = "BREAK ROOM";
 const briefingRoom = "BRIEFING ROOM";

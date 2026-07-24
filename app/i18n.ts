@@ -1,15 +1,47 @@
-import { course as courseEn, fieldGuide as fieldGuideEn, type Dimension, type GuideCard, type Mission } from "./course";
+import { course as courseEn, fieldGuide as fieldGuideEn, sumMinutes, type Course, type Dimension, type GuideCard, type Mission } from "./course";
 import { courseEs, fieldGuideEs } from "./course.es";
+import { advancedFieldGuide, advancedMissions } from "./course.advanced";
+import { advancedFieldGuideEs, advancedMissionsEs } from "./course.advanced.es";
 import { videoLibrary as videoLibraryEn, type VideoLesson } from "./videos";
 import { videoLibraryEs } from "./videos.es";
 
 export type Lang = "en" | "es";
 
+export const FOUNDATIONS_ID = "intro-101";
+export const ADVANCED_ID = "advanced-201";
+
 export function getCourse(lang: Lang): Mission[] {
   return lang === "es" ? courseEs : courseEn;
 }
 
+function getMissions(courseId: string, lang: Lang): Mission[] {
+  if (courseId === ADVANCED_ID) return lang === "es" ? advancedMissionsEs : advancedMissions;
+  return lang === "es" ? courseEs : courseEn;
+}
+
+export function getCourses(lang: Lang): Course[] {
+  const meta = uiStrings[lang].academy.courseMeta;
+  return [FOUNDATIONS_ID, ADVANCED_ID].map((id, index) => {
+    const missions = getMissions(id, lang);
+    return {
+      id,
+      number: index + 1,
+      code: meta[id].code,
+      level: meta[id].level,
+      title: meta[id].title,
+      tagline: meta[id].tagline,
+      minutes: sumMinutes(missions),
+      missions,
+    };
+  });
+}
+
 export function getFieldGuide(lang: Lang): GuideCard[] {
+  return lang === "es" ? fieldGuideEs : fieldGuideEn;
+}
+
+export function getFieldGuideFor(courseId: string, lang: Lang): GuideCard[] {
+  if (courseId === ADVANCED_ID) return lang === "es" ? advancedFieldGuideEs : advancedFieldGuide;
   return lang === "es" ? fieldGuideEs : fieldGuideEn;
 }
 
@@ -252,6 +284,35 @@ const en = {
   },
   footer: {
     note: "Prototype curriculum informed by current US risk-management and aviation safety guidance.",
+  },
+  academy: {
+    catalogNav: "Course Catalog",
+    catalogNavTag: "Foundations to Advanced",
+    catalogKicker: "THE ACADEMY",
+    catalogTitle: "Your path, basics to advanced.",
+    catalogCopy: "Two courses take you from AI fundamentals to leading with AI at work. Finish Foundations, then level up.",
+    continue: "Continue",
+    start: "Start course",
+    review: "Review",
+    locked: "Finish Foundations first",
+    complete: "Complete",
+    missionsWord: "missions",
+    switchCourse: "Switch course",
+    mapTitleFmt: "{n} missions. One sharp AI teammate: you.",
+    courseMeta: {
+      "intro-101": {
+        code: "COURSE 01",
+        level: "Foundations",
+        title: "AI Chatbots: Intro 101",
+        tagline: "The basics: what AI is, safe use, prompting, and verification.",
+      },
+      "advanced-201": {
+        code: "COURSE 02",
+        level: "Advanced",
+        title: "AI at Work: Advanced",
+        tagline: "Prompt engineering, grounding, workflows, agents, and governance.",
+      },
+    } as Record<string, { code: string; level: string; title: string; tagline: string }>,
   },
   game: {
     xp: "XP",
@@ -523,6 +584,35 @@ const es: typeof en = {
   },
   footer: {
     note: "Plan de estudios prototipo basado en guías vigentes de gestión de riesgos y seguridad aérea de EE. UU.",
+  },
+  academy: {
+    catalogNav: "Catálogo de cursos",
+    catalogNavTag: "De fundamentos a avanzado",
+    catalogKicker: "LA ACADEMIA",
+    catalogTitle: "Tu camino, de lo básico a lo avanzado.",
+    catalogCopy: "Dos cursos te llevan de los fundamentos de la IA a liderar con IA en el trabajo. Termina Fundamentos y luego sube de nivel.",
+    continue: "Continuar",
+    start: "Iniciar curso",
+    review: "Repasar",
+    locked: "Termina Fundamentos primero",
+    complete: "Completo",
+    missionsWord: "misiones",
+    switchCourse: "Cambiar de curso",
+    mapTitleFmt: "{n} misiones. Un compañero de IA muy listo: tú.",
+    courseMeta: {
+      "intro-101": {
+        code: "CURSO 01",
+        level: "Fundamentos",
+        title: "Chatbots de IA: Intro 101",
+        tagline: "Lo básico: qué es la IA, uso seguro, prompts y verificación.",
+      },
+      "advanced-201": {
+        code: "CURSO 02",
+        level: "Avanzado",
+        title: "IA en el trabajo: Avanzado",
+        tagline: "Ingeniería de prompts, anclaje, flujos de trabajo, agentes y gobernanza.",
+      },
+    } as Record<string, { code: string; level: string; title: string; tagline: string }>,
   },
   game: {
     xp: "XP",

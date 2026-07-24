@@ -10,6 +10,7 @@ export async function POST(request: Request) {
     skillLevel?: string;
     score?: number;
     certificateId?: string;
+    courseId?: string;
   };
   const name = payload.name?.trim() ?? "";
   const email = payload.email?.trim().toLowerCase() ?? "";
@@ -37,7 +38,7 @@ export async function POST(request: Request) {
     store.completions.push({
       id: crypto.randomUUID(),
       learnerId: learner.id,
-      courseId: "intro-101",
+      courseId: payload.courseId?.trim() || "intro-101",
       score: Math.max(0, Math.min(100, Number(payload.score ?? 0))),
       certificateId,
       completedAt: new Date().toISOString(),
