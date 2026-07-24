@@ -140,7 +140,7 @@ function VideoStage({ scene, title, playing }: { scene: VideoScene; title: strin
       return (
         <div className={cls} aria-hidden="true">
           <div className="vs-home"><span>🍳</span><span>✈️</span><span>📚</span></div>
-          <div className="vs-gen-label">personal accounts — great for life</div>
+          <div className="vs-gen-label">personal accounts: great for life</div>
         </div>
       );
     case "crossstreams":
@@ -183,6 +183,14 @@ function VideoStage({ scene, title, playing }: { scene: VideoScene; title: strin
     default:
       return <div className={cls} aria-hidden="true" />;
   }
+}
+
+// Speech engines read all-caps "DASI" letter-by-letter. Respell it phonetically
+// for the spoken track only, so narration says it as one word ("DAH-see").
+// On-screen captions, titles, and UI keep the real "DASI" spelling.
+const DASI_PHONETIC = "Dahsee";
+function toSpeech(text: string) {
+  return text.replace(/\bDASI\b/g, DASI_PHONETIC);
 }
 
 export function VideoPlayer({
@@ -263,7 +271,7 @@ export function VideoPlayer({
 
     if (useSpeech) {
       window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(active.narration);
+      const utterance = new SpeechSynthesisUtterance(toSpeech(active.narration));
       const voice = pickVoice();
       if (voice) utterance.voice = voice;
       utterance.lang = lang === "es" ? "es-ES" : "en-US";

@@ -146,3 +146,39 @@ test("ships the full eight-mission course", async () => {
   assert.match(page, /cal-course-progress-v2/);
   assert.match(page, /MissionPlayer/);
 });
+
+test("ships a two-course academy: Foundations + Advanced, gated and bilingual", async () => {
+  const [advEn, advEs, i18n, page] = await Promise.all([
+    source("app/course.advanced.ts"),
+    source("app/course.advanced.es.ts"),
+    source("app/i18n.ts"),
+    source("app/page.tsx"),
+  ]);
+
+  const advMissionIds = ["adv-prompting", "adv-grounding", "adv-verify", "adv-workflows", "adv-agents", "adv-govern"];
+  for (const id of advMissionIds) {
+    assert.match(advEn, new RegExp(`id: "${id}"`));
+    assert.match(advEs, new RegExp(`id: "${id}"`));
+  }
+
+  // EN/ES advanced course structural parity, same discipline as the Foundations check.
+  const ids = (src) => [...src.matchAll(/\bid: "([\w-]+)"/g)].map((m) => m[1]);
+  const kinds = (src) => [...src.matchAll(/kind: "(\w+)",/g)].map((m) => m[1]);
+  const correct = (src) => [...src.matchAll(/correct: (true|false)/g)].map((m) => m[1]);
+  const selects = (src) => [...src.matchAll(/shouldSelect: (true|false)/g)].map((m) => m[1]);
+  assert.deepEqual(ids(advEs), ids(advEn));
+  assert.deepEqual(kinds(advEs), kinds(advEn));
+  assert.deepEqual(correct(advEs), correct(advEn));
+  assert.deepEqual(selects(advEs), selects(advEn));
+
+  // Advanced topics from basics-to-advanced are covered.
+  for (const topic of [/prompt/i, /ground/i, /verif/i, /workflow/i, /agent/i, /govern/i]) assert.match(advEn, topic);
+
+  // Catalog architecture: two courses, Advanced gated behind Foundations completion.
+  assert.match(i18n, /getCourses/);
+  assert.match(i18n, /FOUNDATIONS_ID/);
+  assert.match(i18n, /ADVANCED_ID/);
+  assert.match(page, /foundationsComplete/);
+  assert.match(page, /CourseCatalog/);
+  assert.match(page, /cal-active-course-v1/);
+});

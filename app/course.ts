@@ -94,6 +94,21 @@ export type Mission = {
   steps: Step[];
 };
 
+export type Course = {
+  id: string;
+  number: number;
+  code: string;
+  level: string;
+  title: string;
+  tagline: string;
+  minutes: number;
+  missions: Mission[];
+};
+
+export function sumMinutes(missions: Mission[]) {
+  return missions.reduce((total, mission) => total + mission.minutes, 0);
+}
+
 const opsDesk = "HELP DESK STUDIO";
 const breakRoom = "BREAK ROOM";
 const briefingRoom = "BRIEFING ROOM";
@@ -110,7 +125,7 @@ export const course: Mission[] = [
     minutes: 3,
     rule: "AI is an advisor, not a decision maker.",
     ruleDetail:
-      "A chatbot predicts likely words — it doesn't know facts or make judgment calls. Let it draft, summarize, and suggest. You decide.",
+      "A chatbot predicts likely words: it doesn't know facts or make judgment calls. Let it draft, summarize, and suggest. You decide.",
     steps: [
       {
         id: "what-is-ai",
@@ -134,7 +149,7 @@ export const course: Mission[] = [
           {
             icon: "🤖",
             title: "A chatbot is a conversation wrapper",
-            copy: "ChatGPT, Claude, and Copilot are chat windows around a large language model (LLM). It remembers your current chat — that's its context.",
+            copy: "ChatGPT, Claude, and Copilot are chat windows around a large language model (LLM). It remembers your current chat: that's its context.",
           },
           {
             icon: "✨",
@@ -144,7 +159,7 @@ export const course: Mission[] = [
           {
             icon: "⚠️",
             title: "Smooth can still be wrong",
-            copy: "Because answers are predicted — not verified — AI can be confident, polished, and completely incorrect. All at once.",
+            copy: "Because answers are predicted, not verified, AI can be confident, polished, and completely incorrect. All at once.",
           },
         ],
       },
@@ -169,7 +184,7 @@ export const course: Mission[] = [
             detail: "The AI decided to deceive Jordan.",
             correct: false,
             coach:
-              "Chatbots don't have intent. They predict plausible text — when the pattern is wrong, the output is wrong. That's called a hallucination, not a lie.",
+              "Chatbots don't have intent. They predict plausible text: when the pattern is wrong, the output is wrong. That's called a hallucination, not a lie.",
           },
           {
             id: "predicts",
@@ -177,7 +192,7 @@ export const course: Mission[] = [
             detail: "A likely-sounding answer can be generated even when no real fact backs it up.",
             correct: true,
             coach:
-              "Exactly. The model produced a statistically plausible sentence. Plausible and true are different things — which is why verification matters.",
+              "Exactly. The model produced a statistically plausible sentence. Plausible and true are different things, which is why verification matters.",
           },
           {
             id: "broken",
@@ -185,7 +200,7 @@ export const course: Mission[] = [
             detail: "A working chatbot would never produce a wrong number.",
             correct: false,
             coach:
-              "This is normal behavior, not a malfunction. Every chatbot can hallucinate. Expecting it — and checking for it — is part of using AI well.",
+              "This is normal behavior, not a malfunction. Every chatbot can hallucinate. Expecting it, and checking for it, is part of using AI well.",
           },
         ],
       },
@@ -194,7 +209,7 @@ export const course: Mission[] = [
         kind: "lesson",
         label: "Learn",
         title: "What it's actually great at",
-        intro: "Five real jobs AI does brilliantly — and the one rule that keeps you safe with all of them.",
+        intro: "Five real jobs AI does brilliantly, and the one rule that keeps you safe with all of them.",
         scene: {
           speaker: "JORDAN",
           role: "CUSTOMER SUPPORT LEAD",
@@ -211,7 +226,7 @@ export const course: Mission[] = [
           {
             icon: "💡",
             title: "Explain + brainstorm",
-            copy: "Ask it to explain anything at your level — no judgment, unlimited patience. Or ask for 10 ideas and keep the 2 good ones.",
+            copy: "Ask it to explain anything at your level: no judgment, unlimited patience. Or ask for 10 ideas and keep the 2 good ones.",
           },
           {
             icon: "🔍",
@@ -226,7 +241,7 @@ export const course: Mission[] = [
           {
             icon: "👑",
             title: "The golden rule",
-            copy: "AI is an advisor, not a decision maker. It drafts and suggests — a human reviews and decides. Every time, no exceptions.",
+            copy: "AI is an advisor, not a decision maker. It drafts and suggests: a human reviews and decides. Every time, no exceptions.",
           },
         ],
       },
@@ -236,7 +251,7 @@ export const course: Mission[] = [
         label: "Try it",
         dimension: "judgment",
         title: "Generative AI or simple automation?",
-        intro: "Knowing the difference tells you how much to trust — and how much to check.",
+        intro: "Knowing the difference tells you how much to trust, and how much to check.",
         scene: {
           speaker: "MAYA",
           role: "OPERATIONS COORDINATOR",
@@ -250,7 +265,7 @@ export const course: Mission[] = [
             id: "draft-email",
             text: "Drafts a reply to a customer in your tone",
             bucket: "Generative AI",
-            why: "It creates new text each time — so it needs review before sending.",
+            why: "It creates new text each time, so it needs review before sending.",
           },
           {
             id: "auto-forward",
@@ -268,19 +283,19 @@ export const course: Mission[] = [
             id: "reminder",
             text: "Sends a calendar reminder 15 minutes early",
             bucket: "Rule-based automation",
-            why: "A scheduled trigger — no model involved, nothing to double-check.",
+            why: "A scheduled trigger: no model involved, nothing to double-check.",
           },
           {
             id: "code",
             text: "Suggests code as a developer types",
             bucket: "Generative AI",
-            why: "Generated code can look right and still contain bugs — it gets reviewed like any other code.",
+            why: "Generated code can look right and still contain bugs: it gets reviewed like any other code.",
           },
         ],
         correctFeedback:
-          "Perfect sort. The generative tools create something new every time — those are the ones that need human review.",
+          "Perfect sort. The generative tools create something new every time: those are the ones that need human review.",
         incorrectFeedback:
-          "Close — remember the test: does it create new content (generative) or follow a fixed rule (automation)? Adjust and check again.",
+          "Close: remember the test: does it create new content (generative) or follow a fixed rule (automation)? Adjust and check again.",
       },
     ],
   },
@@ -291,7 +306,7 @@ export const course: Mission[] = [
     shortTitle: "Superpowers & Limits",
     kicker: "STRENGTHS + WEAKNESSES",
     description:
-      "The four ways AI quietly fails — and how to spot a hallucination before it costs you.",
+      "The four ways AI quietly fails, and how to spot a hallucination before it costs you.",
     minutes: 3,
     rule: "Confidence is not evidence.",
     ruleDetail:
@@ -314,12 +329,12 @@ export const course: Mission[] = [
           {
             icon: "🎭",
             title: "1. Hallucinations",
-            copy: "AI sometimes invents facts, citations, numbers — even policies. Delivered in the same confident tone as everything true.",
+            copy: "AI sometimes invents facts, citations, numbers: even policies. Delivered in the same confident tone as everything true.",
           },
           {
             icon: "📅",
             title: "2. Outdated knowledge",
-            copy: "Models are trained on data with a cutoff date. Recent changes, new rules, this morning's news? It might not know — and won't always say so.",
+            copy: "Models are trained on data with a cutoff date. Recent changes, new rules, this morning's news? It might not know, and won't always say so.",
           },
           {
             icon: "🕳️",
@@ -329,7 +344,7 @@ export const course: Mission[] = [
           {
             icon: "⚖️",
             title: "4. Bias",
-            copy: "AI learned from human writing — biases included. It can quietly favor some people or framings without any warning label.",
+            copy: "AI learned from human writing: biases included. It can quietly favor some people or framings without any warning label.",
           },
         ],
       },
@@ -354,7 +369,7 @@ export const course: Mission[] = [
             detail: "Fun suggestions for Friday's meeting.",
             correct: false,
             coach:
-              "Low stakes — if an icebreaker is lame, nothing breaks. A quick skim is plenty. Save your verification energy for outputs that matter.",
+              "Low stakes: if an icebreaker is lame, nothing breaks. A quick skim is plenty. Save your verification energy for outputs that matter.",
           },
           {
             id: "stats",
@@ -362,7 +377,7 @@ export const course: Mission[] = [
             detail: "Includes specific statistics and an official-sounding report number.",
             correct: true,
             coach:
-              "Right. Specific citations, statistics, and reference numbers are exactly what chatbots hallucinate — and a safety memo has real consequences. Verify the report exists before this goes anywhere.",
+              "Right. Specific citations, statistics, and reference numbers are exactly what chatbots hallucinate, and a safety memo has real consequences. Verify the report exists before this goes anywhere.",
           },
           {
             id: "rewrite",
@@ -370,7 +385,7 @@ export const course: Mission[] = [
             detail: "Your words, warmed up.",
             correct: false,
             coach:
-              "You wrote the facts; the AI only changed the tone. Read it once to make sure the meaning held — that's verification proportional to risk.",
+              "You wrote the facts; the AI only changed the tone. Read it once to make sure the meaning held: that's verification proportional to risk.",
           },
         ],
       },
@@ -401,12 +416,12 @@ export const course: Mission[] = [
           {
             icon: "🟢",
             title: "Green flag: honest hedging",
-            copy: "“I'm not certain about recent changes” is a good sign — the AI being honest about limits. Don't punish it; verify and move on.",
+            copy: "“I'm not certain about recent changes” is a good sign: the AI being honest about limits. Don't punish it; verify and move on.",
           },
           {
             icon: "🔁",
             title: "Never ask it to grade itself",
-            copy: "“Are you sure?” gets you confident text, not truth. Verification happens outside the chat — at the real source.",
+            copy: "“Are you sure?” gets you confident text, not truth. Verification happens outside the chat: at the real source.",
           },
         ],
       },
@@ -437,7 +452,7 @@ export const course: Mission[] = [
           },
           {
             id: "policy",
-            text: "Quotes “Company Policy 4.2.1” — which doesn't exist",
+            text: "Quotes “Company Policy 4.2.1”, which doesn't exist",
             tag: "Claim",
             shouldSelect: true,
           },
@@ -461,9 +476,9 @@ export const course: Mission[] = [
           },
         ],
         correctFeedback:
-          "Sharp eye. Unverifiable specifics — citations, policy numbers, sourceless statistics — are classic hallucination territory. Honest hedging is a good sign, not a red flag.",
+          "Sharp eye. Unverifiable specifics (citations, policy numbers, sourceless statistics) are classic hallucination territory. Honest hedging is a good sign, not a red flag.",
         incorrectFeedback:
-          "Almost. Flag the specifics you can't verify (citations, policy numbers, sourceless stats). When a chatbot admits uncertainty, that's honesty — not a hallucination.",
+          "Almost. Flag the specifics you can't verify (citations, policy numbers, sourceless stats). When a chatbot admits uncertainty, that's honesty: not a hallucination.",
       },
     ],
   },
@@ -489,7 +504,7 @@ export const course: Mission[] = [
         scene: {
           speaker: "PRIYA",
           role: "DUTY MANAGER",
-          bubble: "Before anyone touches a chatbot with work data — what are the house rules?",
+          bubble: "Before anyone touches a chatbot with work data: what are the house rules?",
           caption: "Four rules. Zero incidents.",
           location: briefingRoom,
         },
@@ -497,7 +512,7 @@ export const course: Mission[] = [
           {
             icon: "🔒",
             title: "1. Never paste sensitive data into unapproved tools",
-            copy: "Customer details, employee info, financials, anything confidential — it stays out of public chatbots. Full stop.",
+            copy: "Customer details, employee info, financials, anything confidential: it stays out of public chatbots. Full stop.",
           },
           {
             icon: "✅",
@@ -512,7 +527,7 @@ export const course: Mission[] = [
           {
             icon: "🧭",
             title: "4. Advisor, not decision maker",
-            copy: "Same golden rule from Mission 1 — because it's the one that holds all the others up.",
+            copy: "Same golden rule from Mission 1, because it's the one that holds all the others up.",
           },
         ],
       },
@@ -562,7 +577,7 @@ export const course: Mission[] = [
         label: "Classify",
         dimension: "safety",
         title: "Tap every detail that should be removed.",
-        intro: "The task needs operational context — not a customer's identity.",
+        intro: "The task needs operational context: not a customer's identity.",
         scene: {
           speaker: "MAYA",
           role: "OPERATIONS COORDINATOR",
@@ -678,7 +693,7 @@ export const course: Mission[] = [
     shortTitle: "Work Mode",
     kicker: "ON THE CLOCK",
     description:
-      "The traffic-light policy — what's allowed, what's restricted, what needs review — and who owns the result.",
+      "The traffic-light policy: what's allowed, what's restricted, what needs review, and who owns the result.",
     minutes: 3,
     rule: "AI assists. You are accountable.",
     ruleDetail:
@@ -706,7 +721,7 @@ export const course: Mission[] = [
           {
             icon: "🟡",
             title: "Yellow: go, then a human reviews",
-            copy: "Anything customer-facing or that colleagues will rely on. AI drafts it fast — a person checks it before it ships.",
+            copy: "Anything customer-facing or that colleagues will rely on. AI drafts it fast: a person checks it before it ships.",
           },
           {
             icon: "🔴",
@@ -730,7 +745,7 @@ export const course: Mission[] = [
         scene: {
           speaker: "PRIYA",
           role: "DUTY MANAGER",
-          bubble: "We're slammed. Have the chatbot write the customer notice and get it out — we can review later.",
+          bubble: "We're slammed. Have the chatbot write the customer notice and get it out: we can review later.",
           caption: "Deadline pressure is where habits get tested.",
           location: opsDesk,
         },
@@ -738,7 +753,7 @@ export const course: Mission[] = [
           {
             id: "comply",
             label: "Send it unreviewed",
-            detail: "The manager gave the instruction — that makes it their call.",
+            detail: "The manager gave the instruction: that makes it their call.",
             correct: false,
             coach:
               "An instruction doesn't transfer accountability, and “review later” isn't review. If the notice contains an AI-invented detail, the harm is immediate.",
@@ -757,7 +772,7 @@ export const course: Mission[] = [
             detail: "Write it entirely by hand to be safe.",
             correct: false,
             coach:
-              "Overkill in the other direction. A reviewed AI draft is both faster and safer than a rushed manual one. The safeguard is review — not avoiding the tool.",
+              "Overkill in the other direction. A reviewed AI draft is both faster and safer than a rushed manual one. The safeguard is review: not avoiding the tool.",
           },
         ],
       },
@@ -788,7 +803,7 @@ export const course: Mission[] = [
           {
             icon: "🙋",
             title: "People decisions stay with people",
-            copy: "Ranking applicants, writing performance reviews, deciding raises — never AI jobs. Legal risk, fairness risk, and it's simply not the tool's call.",
+            copy: "Ranking applicants, writing performance reviews, deciding raises: never AI jobs. Legal risk, fairness risk, and it's simply not the tool's call.",
           },
         ],
       },
@@ -840,7 +855,7 @@ export const course: Mission[] = [
           },
         ],
         correctFeedback:
-          "Excellent triage. Stakes and data sensitivity decide the lane — not how convenient the tool is.",
+          "Excellent triage. Stakes and data sensitivity decide the lane: not how convenient the tool is.",
         incorrectFeedback:
           "Check the lanes again: low-stakes internal work is Go, anything customer-facing needs review, and people decisions or sensitive data are Stop.",
       },
@@ -857,7 +872,7 @@ export const course: Mission[] = [
     minutes: 3,
     rule: "Great helper. Bad oracle.",
     ruleDetail:
-      "Use chatbots freely for planning, learning, and creativity. For medical, legal, financial, or crisis decisions — and anything involving money requests — verify with a real professional through a channel you trust.",
+      "Use chatbots freely for planning, learning, and creativity. For medical, legal, financial, or crisis decisions, and anything involving money requests, verify with a real professional through a channel you trust.",
     steps: [
       {
         id: "life-uses",
@@ -876,17 +891,17 @@ export const course: Mission[] = [
           {
             icon: "🏖️",
             title: "The everyday sweet spot",
-            copy: "Trip plans, meal ideas, learning new skills, explaining a lease in plain English, homework help. Low stakes, big value — go wild.",
+            copy: "Trip plans, meal ideas, learning new skills, explaining a lease in plain English, homework help. Low stakes, big value: go wild.",
           },
           {
             icon: "🩺",
             title: "The four caution zones",
-            copy: "Medical, legal, financial, and mental-health crisis. AI can help you prepare questions — a licensed professional makes the call.",
+            copy: "Medical, legal, financial, and mental-health crisis. AI can help you prepare questions: a licensed professional makes the call.",
           },
           {
             icon: "💡",
             title: "The prep trick",
-            copy: "Use AI to get smarter before the appointment: understand terms, list symptoms, write questions. You show up sharper — the pro still decides.",
+            copy: "Use AI to get smarter before the appointment: understand terms, list symptoms, write questions. You show up sharper: the pro still decides.",
           },
           {
             icon: "🆘",
@@ -906,7 +921,7 @@ export const course: Mission[] = [
           speaker: "SAM",
           role: "MAYA'S FRIEND",
           bubble: "The chatbot says it's probably nothing serious. Should I just skip the doctor?",
-          caption: "Helper for the visit — not a replacement for it.",
+          caption: "Helper for the visit: not a replacement for it.",
           location: breakRoom,
         },
         choices: [
@@ -963,7 +978,7 @@ export const course: Mission[] = [
           {
             icon: "📞",
             title: "The one defense that always works",
-            copy: "Hang up. Contact the real person through a channel you already trusted — their known number, in person. Verify out-of-band, every time.",
+            copy: "Hang up. Contact the real person through a channel you already trusted: their known number, in person. Verify out-of-band, every time.",
           },
         ],
       },
@@ -977,18 +992,18 @@ export const course: Mission[] = [
         scene: {
           speaker: "UNKNOWN CALLER",
           role: "CLAIMS TO BE THE CEO",
-          bubble: "I'm about to board a flight — I need you to buy six gift cards and text me the codes. Keep it between us.",
+          bubble: "I'm about to board a flight: I need you to buy six gift cards and text me the codes. Keep it between us.",
           caption: "Urgency + secrecy + unusual payment = alarm bells.",
           location: opsDesk,
         },
         choices: [
           {
             id: "comply-ceo",
-            label: "Do it — it's the CEO's voice",
+            label: "Do it: it's the CEO's voice",
             detail: "You recognize the voice, and they sound stressed.",
             correct: false,
             coach:
-              "Voice cloning needs only seconds of audio from a podcast or voicemail. The voice proves nothing anymore — the unusual request is the real signal.",
+              "Voice cloning needs only seconds of audio from a podcast or voicemail. The voice proves nothing anymore: the unusual request is the real signal.",
           },
           {
             id: "verify-channel",
@@ -996,15 +1011,15 @@ export const course: Mission[] = [
             detail: "Call the CEO's real number or check with their office before doing anything.",
             correct: true,
             coach:
-              "Textbook defense. Urgency, secrecy, and untraceable payment are the scam trifecta — AI just makes the disguise better. Verify out-of-band, every time.",
+              "Textbook defense. Urgency, secrecy, and untraceable payment are the scam trifecta: AI just makes the disguise better. Verify out-of-band, every time.",
           },
           {
             id: "email-back",
             label: "Reply to the follow-up email",
-            detail: "They emailed too — just confirm the details there.",
+            detail: "They emailed too: just confirm the details there.",
             correct: false,
             coach:
-              "The email is part of the same scam — AI writes flawless phishing now. Verification only counts through a channel you already trusted before this request existed.",
+              "The email is part of the same scam: AI writes flawless phishing now. Verification only counts through a channel you already trusted before this request existed.",
           },
         ],
       },
@@ -1021,7 +1036,7 @@ export const course: Mission[] = [
     minutes: 3,
     rule: "Task + Context + Format.",
     ruleDetail:
-      "Say what you want, give the (safe) background, and name the shape of the answer. Then iterate — the second prompt is where the magic happens.",
+      "Say what you want, give the (safe) background, and name the shape of the answer. Then iterate: the second prompt is where the magic happens.",
     steps: [
       {
         id: "the-formula",
@@ -1045,7 +1060,7 @@ export const course: Mission[] = [
           {
             icon: "🗺️",
             title: "Context: give the background",
-            copy: "Who's it for? What's the situation? Paste the (safe, minimized) source material. AI can't read your mind — only your prompt.",
+            copy: "Who's it for? What's the situation? Paste the (safe, minimized) source material. AI can't read your mind: only your prompt.",
           },
           {
             icon: "📐",
@@ -1065,7 +1080,7 @@ export const course: Mission[] = [
         label: "Try it",
         dimension: "promptCraft",
         title: "Build the prompt: pick the ingredients that belong.",
-        intro: "Maya needs a shift-handover summary. Choose what goes into the ask — and what stays out.",
+        intro: "Maya needs a shift-handover summary. Choose what goes into the ask, and what stays out.",
         scene: {
           speaker: "MAYA",
           role: "OPERATIONS COORDINATOR",
@@ -1079,7 +1094,7 @@ export const course: Mission[] = [
             label: "The task",
             text: "Summarize this shift log for the incoming evening team.",
             good: true,
-            why: "Task plus audience — the foundation of every good prompt.",
+            why: "Task plus audience: the foundation of every good prompt.",
           },
           {
             id: "context",
@@ -1100,7 +1115,7 @@ export const course: Mission[] = [
             label: "Honesty guardrail",
             text: "Only use the log. If information is missing, say so instead of guessing.",
             good: true,
-            why: "The anti-hallucination clause — cheap to add, priceless when it matters.",
+            why: "The anti-hallucination clause: cheap to add, priceless when it matters.",
           },
           {
             id: "flattery",
@@ -1114,13 +1129,13 @@ export const course: Mission[] = [
             label: "The kitchen sink",
             text: "Also paste the full customer database, just in case it helps.",
             good: false,
-            why: "Never add sensitive data “just in case.” Minimum necessary — always.",
+            why: "Never add sensitive data “just in case.” Minimum necessary: always.",
           },
         ],
         correctFeedback:
           "That's a professional-grade prompt: task, safe context, format, and an honesty guardrail. No flattery, no data dumping.",
         incorrectFeedback:
-          "Keep the four load-bearing pieces — task, safe source, format, honesty guardrail — and drop anything that adds flattery or unnecessary data.",
+          "Keep the four load-bearing pieces (task, safe source, format, honesty guardrail), and drop anything that adds flattery or unnecessary data.",
       },
       {
         id: "pro-moves",
@@ -1144,7 +1159,7 @@ export const course: Mission[] = [
           {
             icon: "🔦",
             title: "Power-up 2: ask for assumptions",
-            copy: "Add: “List your assumptions.” Hidden guesses become visible — and checkable — before they bite you.",
+            copy: "Add: “List your assumptions.” Hidden guesses become visible, and checkable, before they bite you.",
           },
           {
             icon: "📊",
@@ -1154,7 +1169,7 @@ export const course: Mission[] = [
           {
             icon: "🔁",
             title: "Then iterate",
-            copy: "The first answer is a draft. “Shorter.” “More formal.” “Make it specific to our process — here's an example.” Steer, don't restart.",
+            copy: "The first answer is a draft. “Shorter.” “More formal.” “Make it specific to our process: here's an example.” Steer, don't restart.",
           },
         ],
       },
@@ -1164,7 +1179,7 @@ export const course: Mission[] = [
         label: "Quick check",
         dimension: "promptCraft",
         title: "The first answer is too generic. What's the strongest follow-up?",
-        intro: "Don't start over — steer.",
+        intro: "Don't start over: steer.",
         scene: {
           speaker: "JORDAN",
           role: "CUSTOMER SUPPORT LEAD",
@@ -1184,10 +1199,10 @@ export const course: Mission[] = [
           {
             id: "add-specifics",
             label: "Add specifics and an example",
-            detail: "“Make it specific to our delay-notification process — here's an example of the tone we use.”",
+            detail: "“Make it specific to our delay-notification process: here's an example of the tone we use.”",
             correct: true,
             coach:
-              "That's steering. Specific context plus an example gives the model something real to match. Generic in, generic out — specific in, specific out.",
+              "That's steering. Specific context plus an example gives the model something real to match. Generic in, generic out: specific in, specific out.",
           },
           {
             id: "give-up",
@@ -1219,7 +1234,7 @@ export const course: Mission[] = [
         kind: "lesson",
         label: "Learn",
         title: "The verification ladder",
-        intro: "Three rungs. Every AI output lands on one. The stakes pick the rung — not your schedule.",
+        intro: "Three rungs. Every AI output lands on one. The stakes pick the rung: not your schedule.",
         scene: {
           speaker: "PRIYA",
           role: "DUTY MANAGER",
@@ -1236,7 +1251,7 @@ export const course: Mission[] = [
           {
             icon: "🔎",
             title: "Rung 2: check the key facts",
-            copy: "Customer-facing or colleague-relied-upon? Verify names, numbers, dates, and claims. Click every citation — fabricated ones look flawless.",
+            copy: "Customer-facing or colleague-relied-upon? Verify names, numbers, dates, and claims. Click every citation: fabricated ones look flawless.",
           },
           {
             icon: "🧑‍🔬",
@@ -1271,7 +1286,7 @@ export const course: Mission[] = [
             detail: "The statistics still sound reasonable.",
             correct: false,
             coach:
-              "The numbers came from the same imagination as the citation. A fabricated source means every claim it “supported” is now unverified — treat them all as suspect.",
+              "The numbers came from the same imagination as the citation. A fabricated source means every claim it “supported” is now unverified: treat them all as suspect.",
           },
           {
             id: "verify-all",
@@ -1287,7 +1302,7 @@ export const course: Mission[] = [
             detail: "It can probably provide the full reference.",
             correct: false,
             coach:
-              "It will generate an even more convincing fake reference — page numbers and all. Models double down on hallucinations when pressed. Verify outside the chat.",
+              "It will generate an even more convincing fake reference: page numbers and all. Models double down on hallucinations when pressed. Verify outside the chat.",
           },
         ],
       },
@@ -1318,7 +1333,7 @@ export const course: Mission[] = [
           {
             icon: "🚧",
             title: "Fence it in",
-            copy: "“Only use the material I gave you — don't add outside facts.” One sentence, dramatically fewer invented details.",
+            copy: "“Only use the material I gave you: don't add outside facts.” One sentence, dramatically fewer invented details.",
           },
         ],
       },
@@ -1332,7 +1347,7 @@ export const course: Mission[] = [
         scene: {
           speaker: "PRIYA",
           role: "DUTY MANAGER",
-          bubble: "Sort the day's AI drafts — what gets skimmed, what gets checked, what goes to an expert?",
+          bubble: "Sort the day's AI drafts: what gets skimmed, what gets checked, what goes to an expert?",
           caption: "Consequences decide the rung.",
           location: briefingRoom,
         },
@@ -1354,13 +1369,13 @@ export const course: Mission[] = [
             id: "procedure",
             text: "Updated ground-handling safety procedure",
             bucket: "Expert review",
-            why: "Safety-critical content needs a qualified reviewer against the source of record — always.",
+            why: "Safety-critical content needs a qualified reviewer against the source of record: always.",
           },
           {
             id: "brainstorm-notes",
             text: "Summary of yesterday's brainstorm",
             bucket: "Quick skim",
-            why: "Internal, low stakes — skim to confirm nothing important was dropped.",
+            why: "Internal, low stakes: skim to confirm nothing important was dropped.",
           },
           {
             id: "board-figures",
@@ -1387,7 +1402,7 @@ export const course: Mission[] = [
     minutes: 5,
     rule: "You are the loop.",
     ruleDetail:
-      "Choose the right tool, protect the data, ask precisely, verify in proportion to impact — and escalate to a person when the stakes demand one.",
+      "Choose the right tool, protect the data, ask precisely, verify in proportion to impact, and escalate to a person when the stakes demand one.",
     steps: [
       {
         id: "five-principles",
@@ -1398,7 +1413,7 @@ export const course: Mission[] = [
         scene: {
           speaker: "PRIYA",
           role: "DUTY MANAGER",
-          bubble: "Before the evening rush hits — give me the house rules, one breath each.",
+          bubble: "Before the evening rush hits: give me the house rules, one breath each.",
           caption: "Five principles. Then it's game time.",
           location: briefingRoom,
         },
@@ -1411,7 +1426,7 @@ export const course: Mission[] = [
           {
             icon: "2️⃣",
             title: "Humans stay accountable",
-            copy: "You send it, you own it — however it was drafted.",
+            copy: "You send it, you own it: however it was drafted.",
           },
           {
             icon: "3️⃣",
@@ -1467,7 +1482,7 @@ export const course: Mission[] = [
             detail: "Safer to do it entirely by hand.",
             correct: false,
             coach:
-              "You'll miss the deadline and gain nothing — the approved tool exists for exactly this. Avoiding AI isn't the safe choice when a sanctioned, faster path is available.",
+              "You'll miss the deadline and gain nothing: the approved tool exists for exactly this. Avoiding AI isn't the safe choice when a sanctioned, faster path is available.",
           },
         ],
       },
@@ -1481,7 +1496,7 @@ export const course: Mission[] = [
         scene: {
           speaker: "MAYA",
           role: "OPERATIONS COORDINATOR",
-          bubble: "Quick pass before this goes in — what leaves the excerpt?",
+          bubble: "Quick pass before this goes in: what leaves the excerpt?",
           caption: "Even approved tools get minimum necessary data.",
           location: opsDesk,
         },
@@ -1499,7 +1514,7 @@ export const course: Mission[] = [
         correctFeedback:
           "Spotless. Employee identity, medical details, and financial identifiers are out; the operational story the briefing needs is intact.",
         incorrectFeedback:
-          "Look again: names and IDs, medical information, and payment details never ride along. Operational facts — gates, delays, causes — are what the briefing actually needs.",
+          "Look again: names and IDs, medical information, and payment details never ride along. Operational facts (gates, delays, causes) are what the briefing actually needs.",
       },
       {
         id: "capstone-prompt",
@@ -1531,7 +1546,7 @@ export const course: Mission[] = [
               "“…top 3 themes, operational impact, recommended actions. Stick to the excerpts; flag gaps instead of filling them.”",
             correct: true,
             coach:
-              "Audience, format, source boundary, honesty guardrail — in one ask. This is what prompt craft looks like when it's a habit instead of a lesson.",
+              "Audience, format, source boundary, honesty guardrail: in one ask. This is what prompt craft looks like when it's a habit instead of a lesson.",
           },
           {
             id: "cap-spin",
@@ -1539,7 +1554,7 @@ export const course: Mission[] = [
             detail: "Leadership prefers good news.",
             correct: false,
             coach:
-              "Asking AI to spin operational reality is asking it to hide the signal leadership exists to see. Accuracy first — always.",
+              "Asking AI to spin operational reality is asking it to hide the signal leadership exists to see. Accuracy first: always.",
           },
         ],
       },
@@ -1560,11 +1575,11 @@ export const course: Mission[] = [
         choices: [
           {
             id: "trust-draft",
-            label: "Trust the draft — it processed everything",
+            label: "Trust the draft: it processed everything",
             detail: "The AI read all the excerpts; you didn't.",
             correct: false,
             coach:
-              "Counting and aggregating are known chatbot weak spots — and this is the briefing's headline number. Reading everything is not the same as counting correctly.",
+              "Counting and aggregating are known chatbot weak spots, and this is the briefing's headline number. Reading everything is not the same as counting correctly.",
           },
           {
             id: "recount",
@@ -1572,7 +1587,7 @@ export const course: Mission[] = [
             detail: "Sixty seconds against the ops board settles the headline number.",
             correct: true,
             coach:
-              "One minute to verify the number leadership will repeat all week. That's verification in proportion to impact — the most valuable habit in this course.",
+              "One minute to verify the number leadership will repeat all week. That's verification in proportion to impact: the most valuable habit in this course.",
           },
           {
             id: "hedge-it",
@@ -1580,7 +1595,7 @@ export const course: Mission[] = [
             detail: "Softening the number covers you either way.",
             correct: false,
             coach:
-              "Hedging an unverified number just makes it vague and wrong. Verification beats wordsmithing — count it.",
+              "Hedging an unverified number just makes it vague and wrong. Verification beats wordsmithing: count it.",
           },
         ],
       },
@@ -1590,11 +1605,11 @@ export const course: Mission[] = [
         label: "Scene 5",
         dimension: "judgment",
         title: "The reports hint at a recurring equipment issue. Who handles that?",
-        intro: "Last decision of the shift — and the most important one.",
+        intro: "Last decision of the shift, and the most important one.",
         scene: {
           speaker: "PRIYA",
           role: "DUTY MANAGER",
-          bubble: "Three of those delays mention the same loader fault. The briefing's done — is the job done?",
+          bubble: "Three of those delays mention the same loader fault. The briefing's done: is the job done?",
           caption: "Some patterns are above the chatbot's pay grade.",
           location: briefingRoom,
         },
@@ -1605,7 +1620,7 @@ export const course: Mission[] = [
             detail: "Have it analyze whether the fault pattern is dangerous.",
             correct: false,
             coach:
-              "Safety-risk assessment belongs to qualified people and established processes. AI helped you spot the pattern — deciding what it means is a human, regulated job.",
+              "Safety-risk assessment belongs to qualified people and established processes. AI helped you spot the pattern: deciding what it means is a human, regulated job.",
           },
           {
             id: "escalate",
@@ -1621,7 +1636,7 @@ export const course: Mission[] = [
             detail: "It's probably nothing urgent.",
             correct: false,
             coach:
-              "A recurring equipment fault is exactly what escalation paths exist for. When AI helps you see a safety signal sooner, act on it sooner — not later.",
+              "A recurring equipment fault is exactly what escalation paths exist for. When AI helps you see a safety signal sooner, act on it sooner: not later.",
           },
         ],
       },
@@ -1644,9 +1659,9 @@ export const fieldGuide: GuideCard[] = [
     title: "The Prompt Formula",
     subtitle: "Start every prompt here",
     lines: [
-      "TASK — say exactly what you want: “Summarize this report into 5 executive bullets.”",
-      "CONTEXT — who it's for, what's going on, plus the (safe) source material.",
-      "FORMAT — the shape you need: bullets, a table, an email under 100 words.",
+      "TASK: say exactly what you want: “Summarize this report into 5 executive bullets.”",
+      "CONTEXT: who it's for, what's going on, plus the (safe) source material.",
+      "FORMAT: the shape you need: bullets, a table, an email under 100 words.",
     ],
   },
   {
@@ -1667,9 +1682,9 @@ export const fieldGuide: GuideCard[] = [
     title: "The Traffic Light",
     subtitle: "What's allowed at work",
     lines: [
-      "🟢 GO — brainstorms, first drafts, summaries of public info, explaining concepts, polishing your own writing.",
-      "🟡 GO + REVIEW — customer-facing text and anything colleagues rely on. A human checks before it ships.",
-      "🔴 STOP — hiring/firing/performance decisions, sensitive data in unapproved tools, legal and financial calls.",
+      "🟢 GO: brainstorms, first drafts, summaries of public info, explaining concepts, polishing your own writing.",
+      "🟡 GO + REVIEW: customer-facing text and anything colleagues rely on. A human checks before it ships.",
+      "🔴 STOP: hiring/firing/performance decisions, sensitive data in unapproved tools, legal and financial calls.",
     ],
   },
   {
@@ -1706,7 +1721,7 @@ export const fieldGuide: GuideCard[] = [
       "2. Humans remain accountable.",
       "3. Verify before acting.",
       "4. Good prompts improve outcomes.",
-      "5. Protect the data — approved tools, minimum necessary.",
+      "5. Protect the data: approved tools, minimum necessary.",
     ],
   },
 ];

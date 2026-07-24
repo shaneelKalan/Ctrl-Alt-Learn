@@ -1,15 +1,47 @@
-import { course as courseEn, fieldGuide as fieldGuideEn, type Dimension, type GuideCard, type Mission } from "./course";
+import { course as courseEn, fieldGuide as fieldGuideEn, sumMinutes, type Course, type Dimension, type GuideCard, type Mission } from "./course";
 import { courseEs, fieldGuideEs } from "./course.es";
+import { advancedFieldGuide, advancedMissions } from "./course.advanced";
+import { advancedFieldGuideEs, advancedMissionsEs } from "./course.advanced.es";
 import { videoLibrary as videoLibraryEn, type VideoLesson } from "./videos";
 import { videoLibraryEs } from "./videos.es";
 
 export type Lang = "en" | "es";
 
+export const FOUNDATIONS_ID = "intro-101";
+export const ADVANCED_ID = "advanced-201";
+
 export function getCourse(lang: Lang): Mission[] {
   return lang === "es" ? courseEs : courseEn;
 }
 
+function getMissions(courseId: string, lang: Lang): Mission[] {
+  if (courseId === ADVANCED_ID) return lang === "es" ? advancedMissionsEs : advancedMissions;
+  return lang === "es" ? courseEs : courseEn;
+}
+
+export function getCourses(lang: Lang): Course[] {
+  const meta = uiStrings[lang].academy.courseMeta;
+  return [FOUNDATIONS_ID, ADVANCED_ID].map((id, index) => {
+    const missions = getMissions(id, lang);
+    return {
+      id,
+      number: index + 1,
+      code: meta[id].code,
+      level: meta[id].level,
+      title: meta[id].title,
+      tagline: meta[id].tagline,
+      minutes: sumMinutes(missions),
+      missions,
+    };
+  });
+}
+
 export function getFieldGuide(lang: Lang): GuideCard[] {
+  return lang === "es" ? fieldGuideEs : fieldGuideEn;
+}
+
+export function getFieldGuideFor(courseId: string, lang: Lang): GuideCard[] {
+  if (courseId === ADVANCED_ID) return lang === "es" ? advancedFieldGuideEs : advancedFieldGuide;
   return lang === "es" ? fieldGuideEs : fieldGuideEn;
 }
 
@@ -33,7 +65,7 @@ const en = {
     heroTitle1: "AI training you",
     heroTitle2: "actually get to play.",
     heroCopy:
-      "Join Maya and Jordan for 8 fast, practical missions about using AI chatbots safely, effectively, and responsibly — at work and beyond.",
+      "Join Maya and Jordan for 8 fast, practical missions about using AI chatbots safely, effectively, and responsibly: at work and beyond.",
     factMinutes: "full course",
     factMissions: "playable missions",
     factCertificate: "certificate",
@@ -73,7 +105,7 @@ const en = {
     oneQuickCheck: "One quick check",
     step3Kicker: "STEP 3 · TRUST CHECK",
     step3Title: "A chatbot gives you a polished answer. What now?",
-    step3Copy: "There is no penalty — this helps establish your starting point.",
+    step3Copy: "There is no penalty: this helps establish your starting point.",
     trustOptions: [
       { id: "trust", title: "Use it", copy: "It sounds confident, so it is probably correct." },
       { id: "verify", title: "Check it", copy: "Compare important claims with a trusted source." },
@@ -100,7 +132,7 @@ const en = {
     videoLibrary: "Video Library",
     videoTag: "Watch with voiceover",
     progress: "Course progress",
-    progressDone: "Course complete — certificate unlocked",
+    progressDone: "Course complete: certificate unlocked",
     progressNote: "minutes of playable training",
   },
   videos: {
@@ -214,7 +246,7 @@ const en = {
   results: {
     kicker: "COURSE COMPLETE",
     title: "Nice work, crew member.",
-    copy: "You finished all {n} missions of AI Chatbots: Intro 101 — tool choice, data safety, prompting, verification, and knowing when a human takes over.",
+    copy: "You finished all {n} missions of AI Chatbots: Intro 101: tool choice, data safety, prompting, verification, and knowing when a human takes over.",
     yourResult: "YOUR RESULT",
     cleared: "Intro 101: Cleared",
     clearedCopy: "{n} missions · {m} minutes of scenario training completed.",
@@ -235,7 +267,7 @@ const en = {
     kickerTag: "REFERENCE, NOT HOMEWORK",
     title1: "Steal these.",
     title2: "That's what they're for.",
-    copy: "Every formula, rule, and red-flag list from the course on one page. Nothing to memorize — just come back whenever you need it.",
+    copy: "Every formula, rule, and red-flag list from the course on one page. Nothing to memorize: just come back whenever you need it.",
     back: "Back to course map",
   },
   certificate: {
@@ -252,6 +284,35 @@ const en = {
   },
   footer: {
     note: "Prototype curriculum informed by current US risk-management and aviation safety guidance.",
+  },
+  academy: {
+    catalogNav: "Course Catalog",
+    catalogNavTag: "Foundations to Advanced",
+    catalogKicker: "THE ACADEMY",
+    catalogTitle: "Your path, basics to advanced.",
+    catalogCopy: "Two courses take you from AI fundamentals to leading with AI at work. Finish Foundations, then level up.",
+    continue: "Continue",
+    start: "Start course",
+    review: "Review",
+    locked: "Finish Foundations first",
+    complete: "Complete",
+    missionsWord: "missions",
+    switchCourse: "Switch course",
+    mapTitleFmt: "{n} missions. One sharp AI teammate: you.",
+    courseMeta: {
+      "intro-101": {
+        code: "COURSE 01",
+        level: "Foundations",
+        title: "AI Chatbots: Intro 101",
+        tagline: "The basics: what AI is, safe use, prompting, and verification.",
+      },
+      "advanced-201": {
+        code: "COURSE 02",
+        level: "Advanced",
+        title: "AI at Work: Advanced",
+        tagline: "Prompt engineering, grounding, workflows, agents, and governance.",
+      },
+    } as Record<string, { code: string; level: string; title: string; tagline: string }>,
   },
   game: {
     xp: "XP",
@@ -304,7 +365,7 @@ const es: typeof en = {
     heroTitle1: "Formación en IA que",
     heroTitle2: "de verdad se juega.",
     heroCopy:
-      "Acompaña a Maya y Jordan en 8 misiones rápidas y prácticas sobre cómo usar chatbots de IA de forma segura, eficaz y responsable — en el trabajo y fuera de él.",
+      "Acompaña a Maya y Jordan en 8 misiones rápidas y prácticas sobre cómo usar chatbots de IA de forma segura, eficaz y responsable: en el trabajo y fuera de él.",
     factMinutes: "curso completo",
     factMissions: "misiones jugables",
     factCertificate: "certificado",
@@ -344,7 +405,7 @@ const es: typeof en = {
     oneQuickCheck: "Una comprobación rápida",
     step3Kicker: "PASO 3 · PRUEBA DE CONFIANZA",
     step3Title: "Un chatbot te da una respuesta impecable. ¿Y ahora?",
-    step3Copy: "No hay penalización — esto solo establece tu punto de partida.",
+    step3Copy: "No hay penalización: esto solo establece tu punto de partida.",
     trustOptions: [
       { id: "trust", title: "Usarla", copy: "Suena segura, así que probablemente es correcta." },
       { id: "verify", title: "Verificarla", copy: "Comparar los datos importantes con una fuente confiable." },
@@ -371,7 +432,7 @@ const es: typeof en = {
     videoLibrary: "Videoteca",
     videoTag: "Míralo con narración",
     progress: "Progreso del curso",
-    progressDone: "Curso completo — certificado desbloqueado",
+    progressDone: "Curso completo: certificado desbloqueado",
     progressNote: "minutos de formación jugable",
   },
   videos: {
@@ -485,7 +546,7 @@ const es: typeof en = {
   results: {
     kicker: "CURSO COMPLETO",
     title: "Buen trabajo, tripulante.",
-    copy: "Terminaste las {n} misiones de Chatbots de IA: Intro 101 — elección de herramienta, seguridad de datos, prompts, verificación y saber cuándo toma el mando una persona.",
+    copy: "Terminaste las {n} misiones de Chatbots de IA: Intro 101: elección de herramienta, seguridad de datos, prompts, verificación y saber cuándo toma el mando una persona.",
     yourResult: "TU RESULTADO",
     cleared: "Intro 101: Superado",
     clearedCopy: "{n} misiones · {m} minutos de formación con escenarios completados.",
@@ -506,7 +567,7 @@ const es: typeof en = {
     kickerTag: "REFERENCIA, NO TAREA",
     title1: "Róbate estas fórmulas.",
     title2: "Para eso están.",
-    copy: "Todas las fórmulas, reglas y señales de alerta del curso en una sola página. Nada que memorizar — vuelve cuando lo necesites.",
+    copy: "Todas las fórmulas, reglas y señales de alerta del curso en una sola página. Nada que memorizar: vuelve cuando lo necesites.",
     back: "Volver al mapa del curso",
   },
   certificate: {
@@ -523,6 +584,35 @@ const es: typeof en = {
   },
   footer: {
     note: "Plan de estudios prototipo basado en guías vigentes de gestión de riesgos y seguridad aérea de EE. UU.",
+  },
+  academy: {
+    catalogNav: "Catálogo de cursos",
+    catalogNavTag: "De fundamentos a avanzado",
+    catalogKicker: "LA ACADEMIA",
+    catalogTitle: "Tu camino, de lo básico a lo avanzado.",
+    catalogCopy: "Dos cursos te llevan de los fundamentos de la IA a liderar con IA en el trabajo. Termina Fundamentos y luego sube de nivel.",
+    continue: "Continuar",
+    start: "Iniciar curso",
+    review: "Repasar",
+    locked: "Termina Fundamentos primero",
+    complete: "Completo",
+    missionsWord: "misiones",
+    switchCourse: "Cambiar de curso",
+    mapTitleFmt: "{n} misiones. Un compañero de IA muy listo: tú.",
+    courseMeta: {
+      "intro-101": {
+        code: "CURSO 01",
+        level: "Fundamentos",
+        title: "Chatbots de IA: Intro 101",
+        tagline: "Lo básico: qué es la IA, uso seguro, prompts y verificación.",
+      },
+      "advanced-201": {
+        code: "CURSO 02",
+        level: "Avanzado",
+        title: "IA en el trabajo: Avanzado",
+        tagline: "Ingeniería de prompts, anclaje, flujos de trabajo, agentes y gobernanza.",
+      },
+    } as Record<string, { code: string; level: string; title: string; tagline: string }>,
   },
   game: {
     xp: "XP",

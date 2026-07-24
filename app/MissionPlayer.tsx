@@ -22,7 +22,7 @@ function SceneCard({ lang, mission, step }: { lang: Lang; mission: Mission; step
   const t = uiStrings[lang].player;
   const stepIndex = mission.steps.indexOf(step);
   return (
-    <div className="scene" role="img" aria-label={`${step.scene.speaker} — ${step.scene.location.toLowerCase()}`}>
+    <div className="scene" role="img" aria-label={`${step.scene.speaker}: ${step.scene.location.toLowerCase()}`}>
       <div className="scene-header">
         <span><i className="record-dot" /> {step.scene.location} · {t.sceneWord} {String(stepIndex + 1).padStart(2, "0")}</span>
         <span>{t.missionTag} {String(mission.number).padStart(2, "0")} · {mission.kicker}</span>

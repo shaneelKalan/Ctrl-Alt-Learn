@@ -21,7 +21,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
   return {
     metadataBase: new URL(origin),
-    title: "Ctrl+Alt+Learn — Human-first AI training",
+    title: "Ctrl+Alt+Learn: Human-first AI training",
     description: "Interactive, scenario-based AI literacy training for modern teams.",
     icons: {
       icon: "/favicon.svg",

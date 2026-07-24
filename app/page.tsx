@@ -3,23 +3,23 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AdminPortal } from "./AdminPortal";
 import { LearnerProfile, Onboarding } from "./Onboarding";
-import { courseMinutes, missionScore, type Dimension, type Mission } from "./course";
+import { missionScore, type Course, type Dimension, type Mission } from "./course";
 import { badges as badgeDefs, evaluateBadges, missionXp, nextRank, rankForXp, updateStreak, type StreakState } from "./game";
-import { fmt, getCourse, getFieldGuide, getVideos, uiStrings, type Lang } from "./i18n";
+import { ADVANCED_ID, FOUNDATIONS_ID, fmt, getCourses, getFieldGuideFor, getVideos, uiStrings, type Lang } from "./i18n";
 import { DimensionStats, emptyDimensionStats, MissionPlayer } from "./MissionPlayer";
 import { VideoPlayer } from "./VideoPlayer";
 
-type View = "dashboard" | "mission" | "debrief" | "results" | "guide" | "video";
+type View = "dashboard" | "mission" | "debrief" | "results" | "guide" | "video" | "catalog";
 type AppMode = "loading" | "onboarding" | "learner" | "admin";
 
 type MissionRecord = { score: number; mistakes: number; completedAt: string };
+type CertificateRecord = { certificateId: string; completedAt: string };
 
 type CourseProgress = {
   version: 2;
   missions: Record<string, MissionRecord>;
   dims: DimensionStats;
-  certificateId?: string;
-  courseCompletedAt?: string;
+  certificates: Record<string, CertificateRecord>;
   xp?: number;
   streak?: StreakState;
   badges?: Record<string, string>;
@@ -60,17 +60,33 @@ function useCountUp(target: number, durationMs = 900) {
 const PROGRESS_KEY = "cal-course-progress-v2";
 const LEGACY_PROGRESS_KEY = "ctrl-alt-learn-progress";
 const PROFILE_KEY = "cal-learner-profile-v1";
+const ACTIVE_COURSE_KEY = "cal-active-course-v1";
 
 function freshProgress(): CourseProgress {
-  return { version: 2, missions: {}, dims: emptyDimensionStats() };
+  return { version: 2, missions: {}, dims: emptyDimensionStats(), certificates: {} };
 }
 
 function loadProgress(): CourseProgress {
   try {
     const saved = window.localStorage.getItem(PROGRESS_KEY);
     if (saved) {
-      const parsed = JSON.parse(saved) as CourseProgress;
-      if (parsed.version === 2) return { ...freshProgress(), ...parsed, dims: { ...emptyDimensionStats(), ...parsed.dims } };
+      const parsed = JSON.parse(saved) as CourseProgress & { certificateId?: string; courseCompletedAt?: string };
+      if (parsed.version === 2) {
+        const merged: CourseProgress = {
+          ...freshProgress(),
+          ...parsed,
+          dims: { ...emptyDimensionStats(), ...parsed.dims },
+          certificates: { ...(parsed.certificates ?? {}) },
+        };
+        // Migrate the pre-multi-course single certificate into the Foundations slot.
+        if (parsed.certificateId && !merged.certificates[FOUNDATIONS_ID]) {
+          merged.certificates[FOUNDATIONS_ID] = {
+            certificateId: parsed.certificateId,
+            completedAt: parsed.courseCompletedAt ?? new Date().toISOString(),
+          };
+        }
+        return merged;
+      }
     }
   } catch {
     window.localStorage.removeItem(PROGRESS_KEY);
@@ -83,7 +99,9 @@ function loadProgress(): CourseProgress {
       const parsed = JSON.parse(legacy) as { completed?: boolean; certificateId?: string };
       if (parsed.completed) {
         progress.missions["data-safety"] = { score: 90, mistakes: 0, completedAt: new Date().toISOString() };
-        if (parsed.certificateId) progress.certificateId = parsed.certificateId;
+        if (parsed.certificateId) {
+          progress.certificates[FOUNDATIONS_ID] = { certificateId: parsed.certificateId, completedAt: new Date().toISOString() };
+        }
       }
     }
   } catch {
@@ -107,56 +125,71 @@ function mergeStats(base: DimensionStats, extra: DimensionStats): DimensionStats
   return merged;
 }
 
-function missionState(course: Mission[], progress: CourseProgress, mission: Mission): "done" | "current" | "locked" {
+function missionState(missions: Mission[], progress: CourseProgress, mission: Mission): "done" | "current" | "locked" {
   if (progress.missions[mission.id]) return "done";
-  const index = course.indexOf(mission);
+  const index = missions.indexOf(mission);
   if (index === 0) return "current";
-  return progress.missions[course[index - 1].id] ? "current" : "locked";
+  return progress.missions[missions[index - 1].id] ? "current" : "locked";
 }
 
-function nextMission(course: Mission[], progress: CourseProgress): Mission | null {
-  return course.find((mission) => !progress.missions[mission.id]) ?? null;
+function nextMission(missions: Mission[], progress: CourseProgress): Mission | null {
+  return missions.find((mission) => !progress.missions[mission.id]) ?? null;
 }
 
-function overallScore(progress: CourseProgress) {
-  const records = Object.values(progress.missions);
+function courseScore(missions: Mission[], progress: CourseProgress) {
+  const records = missions.map((mission) => progress.missions[mission.id]).filter(Boolean) as MissionRecord[];
   if (!records.length) return 0;
   return Math.round(records.reduce((sum, record) => sum + record.score, 0) / records.length);
 }
 
+function courseDoneCount(missions: Mission[], progress: CourseProgress) {
+  return missions.filter((mission) => progress.missions[mission.id]).length;
+}
+
 function MissionRail({
-  course,
+  missions,
+  courseMeta,
   lang,
   progress,
   activeId,
   guideActive,
   videoActive,
+  catalogActive,
   onSelect,
   onGuide,
   onVideos,
+  onCatalog,
 }: {
-  course: Mission[];
+  missions: Mission[];
+  courseMeta: Course;
   lang: Lang;
   progress: CourseProgress;
   activeId: string | null;
   guideActive: boolean;
   videoActive: boolean;
+  catalogActive: boolean;
   onSelect: (mission: Mission) => void;
   onGuide: () => void;
   onVideos: () => void;
+  onCatalog: () => void;
 }) {
   const t = uiStrings[lang].rail;
-  const completedCount = Object.keys(progress.missions).filter((id) => course.some((m) => m.id === id)).length;
+  const a = uiStrings[lang].academy;
+  const completedCount = courseDoneCount(missions, progress);
   return (
-    <aside className="mission-rail" aria-label={t.courseTitle}>
+    <aside className="mission-rail" aria-label={courseMeta.title}>
       <div className="brand-lockup">
         <span className="brand-keys"><i>⌃</i><i>⌥</i><i>↵</i></span>
         <span><strong>Ctrl+Alt+Learn</strong><small>{t.academy}</small></span>
       </div>
-      <div className="course-label"><span>{t.courseLabel}</span><strong>{t.courseTitle}</strong></div>
+      <button className={`mission-link guide-link catalog-link ${catalogActive ? "active" : ""}`} type="button" onClick={onCatalog}>
+        <span>🗂️</span>
+        <p>{a.catalogNav}<small>{a.catalogNavTag}</small></p>
+      </button>
+      <div className="course-label"><span>{courseMeta.code} · {courseMeta.level}</span><strong>{courseMeta.title}</strong></div>
       <nav>
-        {course.map((mission) => {
-          const state = missionState(course, progress, mission);
+        {missions.map((mission) => {
+          const state = missionState(missions, progress, mission);
           const isActive = mission.id === activeId;
           return (
             <button
@@ -177,16 +210,16 @@ function MissionRail({
       </nav>
       <button className={`mission-link guide-link ${videoActive ? "active" : ""}`} type="button" onClick={onVideos}>
         <span>🎬</span>
-        <p>{uiStrings[lang].rail.videoLibrary}<small>{uiStrings[lang].rail.videoTag}</small></p>
+        <p>{t.videoLibrary}<small>{t.videoTag}</small></p>
       </button>
       <button className={`mission-link guide-link ${guideActive ? "active" : ""}`} type="button" onClick={onGuide}>
         <span>📒</span>
         <p>{t.fieldGuide}<small>{t.fieldGuideTag}</small></p>
       </button>
       <div className="rail-progress">
-        <span><b>{t.progress}</b><b>{completedCount}/{course.length}</b></span>
-        <i><b style={{ width: `${(completedCount / course.length) * 100}%` }} /></i>
-        <small>{completedCount === course.length ? t.progressDone : `${courseMinutes} ${t.progressNote}`}</small>
+        <span><b>{t.progress}</b><b>{completedCount}/{missions.length}</b></span>
+        <i><b style={{ width: `${(completedCount / missions.length) * 100}%` }} /></i>
+        <small>{completedCount === missions.length ? t.progressDone : `${courseMeta.minutes} ${t.progressNote}`}</small>
       </div>
     </aside>
   );
@@ -203,7 +236,7 @@ function MasteryPanel({ lang, progress, missionCount }: { lang: Lang; progress: 
         const value = attempts ? Math.round((firstTryCorrect / attempts) * 100) : 0;
         return (
           <div className="mastery-row" key={dim}>
-            <span><b>{t.dimensions[dim]}</b><b>{attempts ? `${value}%` : "—"}</b></span>
+            <span><b>{t.dimensions[dim]}</b><b>{attempts ? `${value}%` : "-"}</b></span>
             <i><b className={colors[dim]} style={{ width: `${attempts ? Math.max(value, 6) : 0}%` }} /></i>
           </div>
         );
@@ -215,7 +248,7 @@ function MasteryPanel({ lang, progress, missionCount }: { lang: Lang; progress: 
             const earned = Boolean(progress.badges?.[badge.id]);
             const meta = t.game.badges[badge.id];
             return (
-              <span className={`trophy ${earned ? "earned" : "locked"}`} key={badge.id} title={`${meta.name} — ${meta.desc}`}>
+              <span className={`trophy ${earned ? "earned" : "locked"}`} key={badge.id} title={`${meta.name}: ${meta.desc}`}>
                 {badge.icon}
               </span>
             );
@@ -229,23 +262,24 @@ function MasteryPanel({ lang, progress, missionCount }: { lang: Lang; progress: 
 }
 
 function CourseMap({
-  course,
+  missions,
   lang,
   progress,
   onSelect,
 }: {
-  course: Mission[];
+  missions: Mission[];
   lang: Lang;
   progress: CourseProgress;
   onSelect: (mission: Mission) => void;
 }) {
   const t = uiStrings[lang].dashboard;
+  const a = uiStrings[lang].academy;
   return (
     <section className="course-map">
-      <div className="course-map-heading"><span className="caption-label">{t.mapKicker}</span><h2>{t.mapTitle}</h2></div>
+      <div className="course-map-heading"><span className="caption-label">{t.mapKicker}</span><h2>{fmt(a.mapTitleFmt, { n: missions.length })}</h2></div>
       <div className="course-map-grid">
-        {course.map((mission) => {
-          const state = missionState(course, progress, mission);
+        {missions.map((mission) => {
+          const state = missionState(missions, progress, mission);
           const record = progress.missions[mission.id];
           return (
             <button
@@ -269,6 +303,77 @@ function CourseMap({
         })}
       </div>
     </section>
+  );
+}
+
+function CourseCatalog({
+  lang,
+  courses,
+  progress,
+  onSelectCourse,
+}: {
+  lang: Lang;
+  courses: Course[];
+  progress: CourseProgress;
+  onSelectCourse: (courseId: string) => void;
+}) {
+  const a = uiStrings[lang].academy;
+  const foundations = courses.find((c) => c.id === FOUNDATIONS_ID)!;
+  const foundationsDone = courseDoneCount(foundations.missions, progress) === foundations.missions.length;
+
+  return (
+    <div className="catalog page-enter">
+      <span className="episode-kicker"><span>{a.catalogKicker}</span><i /></span>
+      <div className="catalog-heading">
+        <h1>{a.catalogTitle}</h1>
+        <p>{a.catalogCopy}</p>
+      </div>
+      <div className="catalog-grid">
+        {courses.map((c) => {
+          const locked = c.id === ADVANCED_ID && !foundationsDone;
+          const done = courseDoneCount(c.missions, progress);
+          const complete = done === c.missions.length;
+          const pct = Math.round((done / c.missions.length) * 100);
+          return (
+            <button
+              className={`catalog-card ${locked ? "locked" : ""} ${complete ? "complete" : ""} comic-box`}
+              disabled={locked}
+              key={c.id}
+              onClick={() => onSelectCourse(c.id)}
+              type="button"
+            >
+              <div className="catalog-card-top">
+                <span className="catalog-course-num">{String(c.number).padStart(2, "0")}</span>
+                <span className={`catalog-level ${c.id === ADVANCED_ID ? "advanced" : ""}`}>{c.level}</span>
+              </div>
+              <strong>{c.title}</strong>
+              <p>{c.tagline}</p>
+              <div className="catalog-card-meta">
+                <span>{c.minutes} min</span>
+                <span>{c.missions.length} {a.missionsWord}</span>
+              </div>
+              {!locked && (
+                <div className="catalog-progress">
+                  <i><b style={{ width: `${pct}%` }} /></i>
+                  <small>{done}/{c.missions.length}</small>
+                </div>
+              )}
+              <div className="catalog-cta">
+                {locked ? (
+                  <span className="catalog-locked-tag">🔒 {a.locked}</span>
+                ) : complete ? (
+                  <span className="catalog-cta-btn review">{a.review} →</span>
+                ) : done > 0 ? (
+                  <span className="catalog-cta-btn">{a.continue} →</span>
+                ) : (
+                  <span className="catalog-cta-btn">{a.start} →</span>
+                )}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
@@ -356,6 +461,7 @@ export default function Home() {
   const [profile, setProfile] = useState<LearnerProfile | null>(null);
   const [view, setView] = useState<View>("dashboard");
   const [progress, setProgress] = useState<CourseProgress>(freshProgress);
+  const [activeCourseId, setActiveCourseId] = useState<string>(FOUNDATIONS_ID);
   const [activeMissionId, setActiveMissionId] = useState<string | null>(null);
   const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
   const [lastResult, setLastResult] = useState<DebriefResult | null>(null);
@@ -377,20 +483,32 @@ export default function Home() {
       setMode("onboarding");
     }
     setProgress(loadProgress());
+    const savedCourse = window.localStorage.getItem(ACTIVE_COURSE_KEY);
+    if (savedCourse === FOUNDATIONS_ID || savedCourse === ADVANCED_ID) setActiveCourseId(savedCourse);
   }, []);
 
   const lang: Lang = profile?.language === "es" ? "es" : "en";
   const t = uiStrings[lang];
-  const course = useMemo(() => getCourse(lang), [lang]);
-  const fieldGuide = useMemo(() => getFieldGuide(lang), [lang]);
+  const courses = useMemo(() => getCourses(lang), [lang]);
+  const foundationsCourse = courses.find((c) => c.id === FOUNDATIONS_ID)!;
+  const foundationsComplete = courseDoneCount(foundationsCourse.missions, progress) === foundationsCourse.missions.length;
+  const activeCourse = courses.find((c) => c.id === activeCourseId) ?? foundationsCourse;
+  const missions = activeCourse.missions;
+  const fieldGuide = useMemo(() => getFieldGuideFor(activeCourse.id, lang), [activeCourse.id, lang]);
   const videos = useMemo(() => getVideos(lang), [lang]);
   const activeVideo = activeVideoId ? videos.find((item) => item.id === activeVideoId) ?? null : null;
 
-  const upNext = useMemo(() => nextMission(course, progress), [course, progress]);
+  const upNext = useMemo(() => nextMission(missions, progress), [missions, progress]);
   const courseComplete = !upNext;
-  const score = overallScore(progress);
-  const activeMission = activeMissionId ? course.find((mission) => mission.id === activeMissionId) ?? null : null;
-  const lastMission = lastResult ? course.find((mission) => mission.id === lastResult.missionId) ?? null : null;
+  const score = courseScore(missions, progress);
+  const activeMission = activeMissionId ? missions.find((mission) => mission.id === activeMissionId) ?? null : null;
+  const lastMission = lastResult ? missions.find((mission) => mission.id === lastResult.missionId) ?? null : null;
+  const activeCertificate = progress.certificates[activeCourse.id];
+
+  function selectCourse(courseId: string) {
+    setActiveCourseId(courseId);
+    window.localStorage.setItem(ACTIVE_COURSE_KEY, courseId);
+  }
 
   function setLanguage(next: Lang) {
     if (!profile) return;
@@ -400,6 +518,8 @@ export default function Home() {
   }
 
   function startMission(mission: Mission) {
+    const owner = courses.find((c) => c.missions.some((m) => m.id === mission.id));
+    if (owner && owner.id !== activeCourseId) selectCourse(owner.id);
     setActiveMissionId(mission.id);
     setView("mission");
   }
@@ -425,30 +545,30 @@ export default function Home() {
       ...progress,
       missions: { ...progress.missions, [activeMission.id]: record },
       dims: mergeStats(progress.dims, result.stats),
+      certificates: { ...progress.certificates },
       xp: (progress.xp ?? 0) + xp.total,
       streak: updateStreak(progress.streak),
       badges: { ...progress.badges },
     };
 
-    const nowComplete = course.every((mission) => updated.missions[mission.id]);
-    if (nowComplete && !updated.courseCompletedAt) {
-      updated.courseCompletedAt = new Date().toISOString();
-      updated.certificateId =
-        updated.certificateId || `CAL-${new Date().getFullYear()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+    const nowComplete = missions.every((mission) => updated.missions[mission.id]);
+    if (nowComplete && !updated.certificates[activeCourse.id]) {
+      const certificateId = `CAL-${new Date().getFullYear()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+      updated.certificates[activeCourse.id] = { certificateId, completedAt: new Date().toISOString() };
       if (profile) {
         void fetch("/api/completions", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...profile, score: overallScore(updated), certificateId: updated.certificateId }),
+          body: JSON.stringify({ ...profile, score: courseScore(missions, updated), certificateId, courseId: activeCourse.id }),
         });
       }
     }
 
-    const records = Object.values(updated.missions);
+    const records = missions.map((mission) => updated.missions[mission.id]).filter(Boolean) as MissionRecord[];
     const newBadges = evaluateBadges(
       {
-        completedMissions: Object.keys(updated.missions).length,
-        totalMissions: course.length,
+        completedMissions: courseDoneCount(missions, updated),
+        totalMissions: missions.length,
         flawlessMissions: records.filter((item) => item.mistakes === 0).length,
         perfectMissions: records.filter((item) => item.score === 100).length,
         courseComplete: nowComplete,
@@ -497,18 +617,21 @@ export default function Home() {
   }
 
   const initials = (profile?.name || "Learner").split(" ").map((part) => part[0]).slice(0, 2).join("").toUpperCase();
-  const spotlight = upNext ?? course[course.length - 1];
-  const spotlightState = missionState(course, progress, spotlight);
+  const spotlight = upNext ?? missions[missions.length - 1];
+  const spotlightState = missionState(missions, progress, spotlight);
 
   return (
     <main className="app-shell">
       <MissionRail
         activeId={view === "mission" && activeMission ? activeMission.id : null}
-        course={course}
+        catalogActive={view === "catalog"}
+        courseMeta={activeCourse}
         guideActive={view === "guide"}
         lang={lang}
+        missions={missions}
         progress={progress}
         videoActive={view === "video"}
+        onCatalog={() => setView("catalog")}
         onSelect={(mission) => startMission(mission)}
         onGuide={() => setView("guide")}
         onVideos={() => { setActiveVideoId(null); setView("video"); }}
@@ -539,6 +662,20 @@ export default function Home() {
           </div>
         </header>
 
+        {view === "catalog" && (
+          <CourseCatalog
+            courses={courses}
+            lang={lang}
+            progress={progress}
+            onSelectCourse={(courseId) => {
+              const locked = courseId === ADVANCED_ID && !foundationsComplete;
+              if (locked) return;
+              selectCourse(courseId);
+              setView("dashboard");
+            }}
+          />
+        )}
+
         {view === "dashboard" && (
           <div className="dashboard page-enter">
             {videos[0] && (
@@ -550,6 +687,17 @@ export default function Home() {
                   <small>{t.videos.spotlightCopy}</small>
                 </span>
                 <span className="video-spotlight-cta">{t.videos.spotlightCta} →</span>
+              </button>
+            )}
+            {courseComplete && activeCourse.id === FOUNDATIONS_ID && (
+              <button className="video-spotlight advanced-spotlight" type="button" onClick={() => setView("catalog")}>
+                <span className="video-spotlight-thumb" aria-hidden="true"><i className="vsp-play">🚀</i></span>
+                <span className="video-spotlight-copy">
+                  <b>{t.academy.catalogKicker}</b>
+                  <strong>{courses.find((c) => c.id === ADVANCED_ID)?.title}</strong>
+                  <small>{courses.find((c) => c.id === ADVANCED_ID)?.tagline}</small>
+                </span>
+                <span className="video-spotlight-cta">{t.academy.start} →</span>
               </button>
             )}
             <div className="episode-kicker"><span>{courseComplete ? t.dashboard.courseComplete : `${t.dashboard.mission} ${String(spotlight.number).padStart(2, "0")}`}</span><i /> {spotlight.kicker}</div>
@@ -589,7 +737,7 @@ export default function Home() {
                   <div className="scene-caption">{spotlight.steps[0].scene.caption}</div>
                 </div>
                 <div className="mission-brief comic-box">
-                  <div><span className="caption-label">{courseComplete ? t.dashboard.victoryLap : t.dashboard.todaysCall}</span><h2>{courseComplete ? t.dashboard.seeResults : spotlight.steps[0].title}</h2><p>{courseComplete ? `${t.dashboard.resultsCopy1} ${score}% · ${course.length} ${t.dashboard.resultsCopy2}` : spotlight.ruleDetail}</p></div>
+                  <div><span className="caption-label">{courseComplete ? t.dashboard.victoryLap : t.dashboard.todaysCall}</span><h2>{courseComplete ? t.dashboard.seeResults : spotlight.steps[0].title}</h2><p>{courseComplete ? `${t.dashboard.resultsCopy1} ${score}% · ${missions.length} ${t.dashboard.resultsCopy2}` : spotlight.ruleDetail}</p></div>
                   {courseComplete ? (
                     <button className="primary-button" type="button" onClick={() => setView("results")}>{t.dashboard.viewResults} <span>→</span></button>
                   ) : (
@@ -599,9 +747,9 @@ export default function Home() {
                   )}
                 </div>
               </div>
-              <MasteryPanel lang={lang} missionCount={course.length} progress={progress} />
+              <MasteryPanel lang={lang} missionCount={missions.length} progress={progress} />
             </div>
-            <CourseMap course={course} lang={lang} progress={progress} onSelect={startMission} />
+            <CourseMap lang={lang} missions={missions} progress={progress} onSelect={startMission} />
           </div>
         )}
 
@@ -618,8 +766,8 @@ export default function Home() {
         {view === "debrief" && lastResult && lastMission && (
           <MissionDebrief
             courseComplete={courseComplete}
-            courseLength={course.length}
-            doneCount={Object.keys(progress.missions).length}
+            courseLength={missions.length}
+            doneCount={courseDoneCount(missions, progress)}
             lang={lang}
             mission={lastMission}
             overall={score}
@@ -665,7 +813,7 @@ export default function Home() {
                 onExit={() => setActiveVideoId(null)}
                 onNextVideo={next ? () => setActiveVideoId(next.id) : undefined}
                 onStartMission={(missionId) => {
-                  const mission = course.find((item) => item.id === missionId);
+                  const mission = courses.flatMap((c) => c.missions).find((item) => item.id === missionId);
                   if (mission) { setActiveVideoId(null); startMission(mission); }
                 }}
               />
@@ -699,11 +847,11 @@ export default function Home() {
             <div className="confetti" aria-hidden="true"><i /><i /><i /><i /><i /><i /></div>
             <span className="episode-kicker">{t.results.kicker}</span>
             <h1>{t.results.title}</h1>
-            <p>{fmt(t.results.copy, { n: course.length })}</p>
+            <p>{fmt(t.results.copy, { n: missions.length })}</p>
             <div className="result-grid">
               <section className="score-card comic-box">
                 <span className="score-ring"><b>{score}</b><small>{t.debrief.masteryWord}</small></span>
-                <div><span>{t.results.yourResult}</span><h2>{t.results.cleared}</h2><p>{fmt(t.results.clearedCopy, { n: course.length, m: courseMinutes })}</p></div>
+                <div><span>{t.results.yourResult}</span><h2>{t.results.cleared}</h2><p>{fmt(t.results.clearedCopy, { n: missions.length, m: activeCourse.minutes })}</p></div>
               </section>
               <section className="takeaway-card comic-box"><span>{t.results.keepRule}</span><h2>{t.results.ruleTitle}</h2><p>{t.results.ruleCopy}</p></section>
             </div>
@@ -712,7 +860,12 @@ export default function Home() {
               <label><span>{t.results.learnerName}</span><input value={learnerName} onChange={(event) => setLearnerName(event.target.value)} placeholder={t.results.namePlaceholder} /></label>
               <button className="primary-button" disabled={!learnerName.trim() || !courseComplete} type="button" onClick={() => window.print()}>{t.results.export} <span>↗</span></button>
             </section>
-            <div className="result-actions"><button className="text-button" type="button" onClick={() => setView("dashboard")}>{t.results.backMap}</button></div>
+            <div className="result-actions">
+              {activeCourse.id === FOUNDATIONS_ID && (
+                <button className="primary-button" type="button" onClick={() => setView("catalog")}>{t.academy.catalogNav} <span>→</span></button>
+              )}
+              <button className="text-button" type="button" onClick={() => setView("dashboard")}>{t.results.backMap}</button>
+            </div>
           </div>
         )}
 
@@ -729,9 +882,9 @@ export default function Home() {
           <p>{t.certificate.certifies}</p>
           <h1>{learnerName || t.certificate.namePlaceholder}</h1>
           <p>{t.certificate.completed}</p>
-          <h2>{t.certificate.courseName}</h2>
-          <h3>{fmt(t.certificate.subtitle, { n: course.length })}</h3>
-          <div className="certificate-meta"><span><small>{t.certificate.dateLabel}</small>{new Intl.DateTimeFormat(lang === "es" ? "es-US" : "en-US", { dateStyle: "long" }).format(progress.courseCompletedAt ? new Date(progress.courseCompletedAt) : new Date())}</span><span><small>{t.certificate.masteryLabel}</small>{score}%</span><span><small>{t.certificate.idLabel}</small>{progress.certificateId || "—"}</span></div>
+          <h2>{activeCourse.title}</h2>
+          <h3>{fmt(t.certificate.subtitle, { n: missions.length })}</h3>
+          <div className="certificate-meta"><span><small>{t.certificate.dateLabel}</small>{new Intl.DateTimeFormat(lang === "es" ? "es-US" : "en-US", { dateStyle: "long" }).format(activeCertificate ? new Date(activeCertificate.completedAt) : new Date())}</span><span><small>{t.certificate.masteryLabel}</small>{score}%</span><span><small>{t.certificate.idLabel}</small>{activeCertificate?.certificateId || "-"}</span></div>
           <div className="certificate-rule">{t.certificate.rule}</div>
         </div>
       </section>
